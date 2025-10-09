@@ -145,7 +145,7 @@ export const MessagesPage: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      console.log('Fetching messages data...')
+      // console.log('Fetching messages data...')
       // Fetch conversations and available users in parallel
       const [conversationsRes, usersRes] = await Promise.all([
         fetch('https://alumconnect-s4c7.onrender.com/api/messages/conversations', {
@@ -156,12 +156,12 @@ export const MessagesPage: React.FC = () => {
         })
       ])
 
-      console.log('Conversations response:', conversationsRes.status)
-      console.log('Users response:', usersRes.status)
+      // console.log('Conversations response:', conversationsRes.status)
+      // console.log('Users response:', usersRes.status)
 
       if (conversationsRes.ok) {
         const conversationsData = await conversationsRes.json()
-        console.log('Conversations data:', conversationsData)
+        // console.log('Conversations data:', conversationsData)
         setConversations(conversationsData)
       } else {
         console.error('Failed to fetch conversations:', conversationsRes.status)
@@ -169,7 +169,7 @@ export const MessagesPage: React.FC = () => {
 
       if (usersRes.ok) {
         const usersData = await usersRes.json()
-        console.log('Available users data:', usersData)
+        // console.log('Available users data:', usersData)
         setAvailableUsers(usersData)
       } else {
         console.error('Failed to fetch available users:', usersRes.status)
@@ -193,10 +193,10 @@ export const MessagesPage: React.FC = () => {
         body: JSON.stringify({ other_user_id: otherUserId })
       })
 
-      console.log('Start conversation response:', response.status)
+      // console.log('Start conversation response:', response.status)
       if (response.ok) {
         const newConversation = await response.json()
-        console.log('New conversation created:', newConversation)
+        // console.log('New conversation created:', newConversation)
         // Find the conversation in our list or create a new one
         const otherUser = availableUsers.find(u => u.id === otherUserId)
         const conversation = conversations.find(c => c.other_user_id === otherUserId) || {

@@ -59,15 +59,15 @@ export const AlumniMenteesPage: React.FC = () => {
       }
       
       try {
-        console.log('Fetching mentorship requests...')
+        // console.log('Fetching mentorship requests...')
         const res = await fetch('https://alumconnect-s4c7.onrender.com/api/mentorship/requests', {
           headers: { Authorization: `Bearer ${token}` },
         })
-        console.log('Response status:', res.status)
+        // console.log('Response status:', res.status)
         
         if (res.ok) {
           const data = await res.json()
-          console.log('Mentorship requests data:', data)
+          // console.log('Mentorship requests data:', data)
           setItems(data)
         } else {
           const error = await res.json()

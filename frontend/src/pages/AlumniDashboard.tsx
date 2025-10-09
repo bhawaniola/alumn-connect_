@@ -232,7 +232,7 @@ export const AlumniDashboard: React.FC = () => {
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Button asChild className="h-24 flex flex-col items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+            <Button asChild className="h-24 flex flex-col items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200 hover:from-blue-200 hover:to-blue-300 text-blue-700 shadow hover:shadow-md transition-all duration-300 hover:-translate-y-1">
               <Link to="/alumni/create-project">
                 <div className="p-3 rounded-full bg-white/20 group-hover:bg-white/30 transition-all duration-300 mb-2">
                   <Plus className="h-6 w-6" />
@@ -241,7 +241,7 @@ export const AlumniDashboard: React.FC = () => {
               </Link>
             </Button>
             
-            <Button asChild variant="outline" className="h-24 flex flex-col items-center justify-center border-2 border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+            <Button asChild variant="outline" className="h-24 flex flex-col items-center justify-center bg-gradient-to-br from-green-100 to-emerald-200 hover:from-green-200 hover:to-emerald-300 text-green-700 shadow hover:shadow-md transition-all duration-300 hover:-translate-y-1">
               <Link to="/alumni/create-blog">
                 <div className="p-3 rounded-full bg-green-100 group-hover:bg-green-200 transition-all duration-300 mb-2">
                   <FilePlus2 className="h-6 w-6" />
@@ -250,7 +250,7 @@ export const AlumniDashboard: React.FC = () => {
               </Link>
             </Button>
             
-            <Button asChild variant="outline" className="h-24 flex flex-col items-center justify-center border-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+            <Button asChild variant="outline" className="h-24 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-200 hover:from-indigo-200 hover:to-purple-300 text-indigo-700 shadow hover:shadow-md transition-all duration-300 hover:-translate-y-1">
               <Link to="/alumni/mentees">
                 <div className="p-3 rounded-full bg-purple-100 group-hover:bg-purple-200 transition-all duration-300 mb-2">
                   <Users className="h-6 w-6" />
@@ -259,9 +259,9 @@ export const AlumniDashboard: React.FC = () => {
               </Link>
             </Button>
             
-            <Button asChild variant="outline" className="h-24 flex flex-col items-center justify-center border-2 border-orange-300 text-orange-700 hover:bg-orange-50 hover:border-orange-400 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+            <Button asChild variant="outline" className="h-24 flex flex-col items-center justify-center bg-gradient-to-br from-teal-100 to-cyan-200 hover:from-teal-200 hover:to-cyan-300 text-teal-700 shadow hover:shadow-md transition-all duration-300 hover:-translate-y-1">
               <Link to="/alumni/projects">
-                <div className="p-3 rounded-full bg-orange-100 group-hover:bg-orange-200 transition-all duration-300 mb-2">
+                <div className="p-3 rounded-full bg-teal-100 group-hover:bg-cyan-200 transition-all duration-300 mb-2">
                   <Briefcase className="h-6 w-6" />
                 </div>
                 <span className="text-sm font-semibold">My Projects</span>

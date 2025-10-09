@@ -28,9 +28,9 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="founders-dashboard" className="text-muted-foreground hover:text-primary transition-colors"
+                <Link to="register" className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Founder's Connect
+                  Register
                 </Link>
               </li>
               <li>

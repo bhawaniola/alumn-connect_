@@ -42,12 +42,12 @@ export const BlogPage: React.FC = () => {
 
   const fetchBlogPosts = async () => {
     try {
-      console.log('Fetching blog posts...')
+      // console.log('Fetching blog posts...')
       const response = await fetch('https://alumconnect-s4c7.onrender.com/api/blog')
-      console.log('Blog posts response:', response.status)
+      // console.log('Blog posts response:', response.status)
       if (response.ok) {
         const data = await response.json()
-        console.log('Blog posts data:', data)
+        // console.log('Blog posts data:', data)
         setPosts(data)
       } else {
         console.error('Failed to fetch blog posts:', response.status)
@@ -89,12 +89,12 @@ export const BlogPage: React.FC = () => {
 
   const handleLike = async (postId: number) => {
     if (!token) {
-      console.log('No token available for liking')
+      // console.log('No token available for liking')
       return
     }
     
     try {
-      console.log('Liking post:', postId)
+      // console.log('Liking post:', postId)
       const response = await fetch(`https://alumconnect-s4c7.onrender.com/api/blog/${postId}/like`, {
         method: 'POST',
         headers: {
@@ -102,10 +102,10 @@ export const BlogPage: React.FC = () => {
         }
       })
       
-      console.log('Like response status:', response.status)
+      // console.log('Like response status:', response.status)
       if (response.ok) {
         const data = await response.json()
-        console.log('Like response data:', data)
+        // console.log('Like response data:', data)
         setPosts(prev => prev.map(post =>
           post.id === postId
             ? {

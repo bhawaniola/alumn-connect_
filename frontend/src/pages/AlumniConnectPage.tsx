@@ -90,7 +90,7 @@ export const AlumniConnectPage: React.FC = () => {
       // Fetch projects and blogs in parallel
       const [projectsResponse, blogsResponse] = await Promise.all([
         fetch('https://alumconnect-s4c7.onrender.com/api/projects'),
-        fetch('https://alumconnect-s4c7.onrender.com/api/blog-posts')
+        fetch('https://alumconnect-s4c7.onrender.com/api/blog')
       ])
 
       if (projectsResponse.ok) {
