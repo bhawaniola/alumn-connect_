@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button'
 import { Textarea } from '../components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog'
 import { Avatar, AvatarFallback } from '../components/ui/avatar'
-import { Briefcase, Users, Loader2, Send, CheckCircle, ArrowLeft, MapPin, Clock, DollarSign, UserCheck, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Edit, Mail, Phone, Globe, Award, TrendingUp, Handshake, Star, ChevronDown, ChevronUp, Calendar, Eye, Heart, Share2, Bookmark } from 'lucide-react'
+import { Briefcase, Users, Loader2, Send, CheckCircle, ArrowLeft, MapPin, Clock, DollarSign, UserCheck, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Edit, Mail, Phone, Globe, Award, TrendingUp, Handshake, Star, ChevronDown, Calendar, Heart } from 'lucide-react'
 import { ProfileModal } from '../components/ProfileModal'
 
 interface Position {
@@ -77,7 +77,6 @@ export const ProjectDetailPage: React.FC = () => {
   const [related, setRelated] = useState<Project[]>([])
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
   const [isTeamExpanded, setIsTeamExpanded] = useState(false)
-  const [isSaved, setIsSaved] = useState(false)
 
   useEffect(() => {
     if (id) {

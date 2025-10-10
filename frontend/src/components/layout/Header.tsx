@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import { GooeyNav } from '../../components/ui/gooey-nav'
 import { Sheet, SheetContent, SheetTrigger } from '../../components/ui/sheet'
 import { Menu, GraduationCap, Users, BookOpen, MessageCircle, LogOut, User } from 'lucide-react'
-import logo from "../../images/logo.png";
+import logo from "../../images/name.png";
 
 export const Header: React.FC = () => {
   const { user, logout, token } = useAuth()
@@ -120,10 +120,9 @@ export const Header: React.FC = () => {
             <img
               src={logo}
               alt="Logo"
-              className="h-16 w-16 object-cover rounded-full"
+              className="h-16 w-64 object-cover rounded-full"
             />
             </div>
-            <span className="text-xl font-bold text-gray-800">KGP Launchpad</span>
           </Link>
 
           {/* Desktop Navigation with GooeyNav */}

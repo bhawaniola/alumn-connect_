@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { GraduationCap, Mail, MapPin, Phone } from 'lucide-react'
+import { Mail, MapPin, Phone } from 'lucide-react'
+import logo from "../../images/logo.png";
 
 export const Footer: React.FC = () => {
   return (
@@ -10,7 +11,11 @@ export const Footer: React.FC = () => {
           {/* Logo and Description */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <GraduationCap className="h-6 w-6 text-primary" />
+            <img
+              src={logo}
+              alt="Logo"
+              className="h-16 w-16 object-cover rounded-full"
+            />
               <span className="text-lg font-bold">IIT KGP Launchpad</span>
             </div>
             <p className="text-sm text-muted-foreground">
