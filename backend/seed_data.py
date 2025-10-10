@@ -212,12 +212,12 @@ def seed_database():
     # ----------------- Project Positions -----------------
     project_positions = [
         # AI-Powered Healthcare Diagnostics - 3 positions
-        {'project_id': project_ids['AI-Powered Healthcare Diagnostics'], 'title': 'ML Engineer', 'description': 'Develop and train deep learning models for medical image analysis', 'required_skills': json.dumps(['Python', 'TensorFlow', 'PyTorch', 'Computer Vision']), 'count': 2, 'filled_count': 1, 'is_active': True},
+        {'project_id': project_ids['AI-Powered Healthcare Diagnostics'], 'title': 'Machine Learning Engineer', 'description': 'Develop and train deep learning models for medical image analysis', 'required_skills': json.dumps(['Python', 'TensorFlow', 'PyTorch', 'Computer Vision']), 'count': 2, 'filled_count': 1, 'is_active': True},
         {'project_id': project_ids['AI-Powered Healthcare Diagnostics'], 'title': 'Backend Developer', 'description': 'Build scalable APIs and database architecture', 'required_skills': json.dumps(['Python', 'Flask', 'PostgreSQL', 'REST API']), 'count': 1, 'filled_count': 0, 'is_active': True},
         {'project_id': project_ids['AI-Powered Healthcare Diagnostics'], 'title': 'UI/UX Designer', 'description': 'Design intuitive interfaces for healthcare professionals', 'required_skills': json.dumps(['Figma', 'Adobe XD', 'UI Design', 'Healthcare UX']), 'count': 1, 'filled_count': 0, 'is_active': True},
         
         # Sustainable Energy Management System - 2 positions
-        {'project_id': project_ids['Sustainable Energy Management System'], 'title': 'IoT Developer', 'description': 'Develop IoT sensors and edge computing solutions', 'required_skills': json.dumps(['IoT', 'Embedded Systems', 'C++', 'MQTT']), 'count': 2, 'filled_count': 0, 'is_active': True},
+        {'project_id': project_ids['Sustainable Energy Management System'], 'title': 'DevOps Engineer', 'description': 'Develop IoT sensors and edge computing solutions', 'required_skills': json.dumps(['IoT', 'Embedded Systems', 'C++', 'MQTT']), 'count': 2, 'filled_count': 0, 'is_active': True},
         {'project_id': project_ids['Sustainable Energy Management System'], 'title': 'Data Analyst', 'description': 'Analyze energy consumption patterns and optimize grid performance', 'required_skills': json.dumps(['Python', 'Data Analytics', 'Power BI', 'SQL']), 'count': 1, 'filled_count': 0, 'is_active': True},
         
         # Blockchain Supply Chain Tracker - 3 positions
@@ -225,20 +225,21 @@ def seed_database():
         {'project_id': project_ids['Blockchain Supply Chain Tracker'], 'title': 'Frontend Developer', 'description': 'Build responsive web interface for supply chain tracking', 'required_skills': json.dumps(['React', 'TypeScript', 'Web3.js', 'TailwindCSS']), 'count': 1, 'filled_count': 0, 'is_active': True},
         
         # Smart Agriculture Monitoring - 2 positions
-        {'project_id': project_ids['Smart Agriculture Monitoring'], 'title': 'IoT Engineer', 'description': 'Design and deploy sensor networks for crop monitoring', 'required_skills': json.dumps(['IoT', 'Sensors', 'Arduino', 'Raspberry Pi']), 'count': 1, 'filled_count': 1, 'is_active': False},
+        {'project_id': project_ids['Smart Agriculture Monitoring'], 'title': 'Software Developer', 'description': 'Design and deploy sensor networks for crop monitoring', 'required_skills': json.dumps(['IoT', 'Sensors', 'Arduino', 'Raspberry Pi']), 'count': 1, 'filled_count': 1, 'is_active': False},
         {'project_id': project_ids['Smart Agriculture Monitoring'], 'title': 'Full Stack Developer', 'description': 'Build web dashboard for real-time monitoring', 'required_skills': json.dumps(['React', 'Node.js', 'MongoDB', 'Chart.js']), 'count': 1, 'filled_count': 0, 'is_active': True},
         
         # Urban Infrastructure Planning Tool - 2 positions
-        {'project_id': project_ids['Urban Infrastructure Planning Tool'], 'title': 'GIS Specialist', 'description': 'Develop GIS-based mapping and analysis tools', 'required_skills': json.dumps(['GIS', 'ArcGIS', 'QGIS', 'Python']), 'count': 1, 'filled_count': 0, 'is_active': True},
-        {'project_id': project_ids['Urban Infrastructure Planning Tool'], 'title': '3D Visualization Developer', 'description': 'Create 3D models and visualization for urban planning', 'required_skills': json.dumps(['Three.js', 'Blender', 'WebGL', 'AutoCAD']), 'count': 1, 'filled_count': 0, 'is_active': True},
+        {'project_id': project_ids['Urban Infrastructure Planning Tool'], 'title': 'Research Analyst', 'description': 'Develop GIS-based mapping and analysis tools', 'required_skills': json.dumps(['GIS', 'ArcGIS', 'QGIS', 'Python']), 'count': 1, 'filled_count': 0, 'is_active': True},
+        {'project_id': project_ids['Urban Infrastructure Planning Tool'], 'title': 'Product Designer', 'description': 'Create 3D models and visualization for urban planning', 'required_skills': json.dumps(['Three.js', 'Blender', 'WebGL', 'AutoCAD']), 'count': 1, 'filled_count': 0, 'is_active': True},
         
         # Chemical Process Optimization Platform - 2 positions
-        {'project_id': project_ids['Chemical Process Optimization Platform'], 'title': 'Process Engineer', 'description': 'Optimize chemical manufacturing processes using AI', 'required_skills': json.dumps(['Chemical Engineering', 'Process Simulation', 'Python', 'Optimization']), 'count': 1, 'filled_count': 1, 'is_active': False},
-        {'project_id': project_ids['Chemical Process Optimization Platform'], 'title': 'ML Engineer', 'description': 'Develop predictive models for process optimization', 'required_skills': json.dumps(['Machine Learning', 'Python', 'TensorFlow', 'Data Science']), 'count': 1, 'filled_count': 0, 'is_active': True},
+        {'project_id': project_ids['Chemical Process Optimization Platform'], 'title': 'Consultant', 'description': 'Optimize chemical manufacturing processes using AI', 'required_skills': json.dumps(['Chemical Engineering', 'Process Simulation', 'Python', 'Optimization']), 'count': 1, 'filled_count': 1, 'is_active': False},
+        {'project_id': project_ids['Chemical Process Optimization Platform'], 'title': 'Machine Learning Engineer', 'description': 'Develop predictive models for process optimization', 'required_skills': json.dumps(['Machine Learning', 'Python', 'TensorFlow', 'Data Science']), 'count': 1, 'filled_count': 0, 'is_active': True},
         
         # Robotics for Manufacturing Automation - 3 positions
-        {'project_id': project_ids['Robotics for Manufacturing Automation'], 'title': 'Robotics Engineer', 'description': 'Design and program robotic systems for manufacturing', 'required_skills': json.dumps(['Robotics', 'ROS', 'Python', 'Control Systems']), 'count': 2, 'filled_count': 0, 'is_active': True},
-        {'project_id': project_ids['Robotics for Manufacturing Automation'], 'title': 'Computer Vision Engineer', 'description': 'Develop vision systems for quality control', 'required_skills': json.dumps(['Computer Vision', 'OpenCV', 'Python', 'Deep Learning']), 'count': 1, 'filled_count': 0, 'is_active': True},
+        {'project_id': project_ids['Robotics for Manufacturing Automation'], 'title': 'Software Developer', 'description': 'Design and program robotic systems for manufacturing', 'required_skills': json.dumps(['Robotics', 'ROS', 'Python', 'Control Systems']), 'count': 2, 'filled_count': 0, 'is_active': True},
+        {'project_id': project_ids['Robotics for Manufacturing Automation'], 'title': 'AI Engineer', 'description': 'Develop vision systems for quality control', 'required_skills': json.dumps(['Computer Vision', 'OpenCV', 'Python', 'Deep Learning']), 'count': 1, 'filled_count': 0, 'is_active': True},
+        {'project_id': project_ids['Robotics for Manufacturing Automation'], 'title': 'Intern', 'description': 'Assist with testing and documentation of robotic systems', 'required_skills': json.dumps(['Python', 'Documentation', 'Testing']), 'count': 2, 'filled_count': 0, 'is_active': True},
     ]
     
     position_ids = {}
@@ -286,36 +287,36 @@ def seed_database():
     
     # ----------------- Project Applications -----------------
     project_applications = [
-        # AI Healthcare - ML Engineer position
-        {'project_id': project_ids['AI-Powered Healthcare Diagnostics'], 'position_id': position_ids[f"{project_ids['AI-Powered Healthcare Diagnostics']}_ML Engineer"], 'student_id': user_ids['sneha.reddy@iitkgp.ac.in'], 'message': 'I have experience with Python and TensorFlow. Completed a course on medical imaging. Very excited about this project!', 'status': 'pending'},
-        {'project_id': project_ids['AI-Powered Healthcare Diagnostics'], 'position_id': position_ids[f"{project_ids['AI-Powered Healthcare Diagnostics']}_ML Engineer"], 'student_id': user_ids['karan.malhotra@iitkgp.ac.in'], 'message': 'I have worked on computer vision projects and am passionate about healthcare AI.', 'status': 'accepted'},
+        # AI Healthcare - Machine Learning Engineer position
+        {'project_id': project_ids['AI-Powered Healthcare Diagnostics'], 'position_id': position_ids[f"{project_ids['AI-Powered Healthcare Diagnostics']}_Machine Learning Engineer"], 'student_id': user_ids['sneha.reddy@iitkgp.ac.in'], 'message': 'I have experience with Python and TensorFlow. Completed a course on medical imaging. Very excited about this project!', 'status': 'pending'},
+        {'project_id': project_ids['AI-Powered Healthcare Diagnostics'], 'position_id': position_ids[f"{project_ids['AI-Powered Healthcare Diagnostics']}_Machine Learning Engineer"], 'student_id': user_ids['karan.malhotra@iitkgp.ac.in'], 'message': 'I have worked on computer vision projects and am passionate about healthcare AI.', 'status': 'accepted'},
         
         # AI Healthcare - Backend Developer position
         {'project_id': project_ids['AI-Powered Healthcare Diagnostics'], 'position_id': position_ids[f"{project_ids['AI-Powered Healthcare Diagnostics']}_Backend Developer"], 'student_id': user_ids['arjun.mehta@iitkgp.ac.in'], 'message': 'Strong experience in Flask and PostgreSQL. Built several REST APIs for healthcare applications.', 'status': 'pending'},
         
-        # Sustainable Energy - IoT Developer position
-        {'project_id': project_ids['Sustainable Energy Management System'], 'position_id': position_ids[f"{project_ids['Sustainable Energy Management System']}_IoT Developer"], 'student_id': user_ids['karan.malhotra@iitkgp.ac.in'], 'message': 'I have experience with IoT and embedded systems. Would love to contribute to renewable energy solutions.', 'status': 'pending'},
+        # Sustainable Energy - DevOps Engineer position
+        {'project_id': project_ids['Sustainable Energy Management System'], 'position_id': position_ids[f"{project_ids['Sustainable Energy Management System']}_DevOps Engineer"], 'student_id': user_ids['karan.malhotra@iitkgp.ac.in'], 'message': 'I have experience with IoT and embedded systems. Would love to contribute to renewable energy solutions.', 'status': 'pending'},
         
         # Blockchain - Blockchain Developer position
         {'project_id': project_ids['Blockchain Supply Chain Tracker'], 'position_id': position_ids[f"{project_ids['Blockchain Supply Chain Tracker']}_Blockchain Developer"], 'student_id': user_ids['sneha.reddy@iitkgp.ac.in'], 'message': 'I have been learning blockchain and smart contracts. This project aligns perfectly with my interests.', 'status': 'declined'},
         
-        # Smart Agriculture - IoT Engineer position (filled)
-        {'project_id': project_ids['Smart Agriculture Monitoring'], 'position_id': position_ids[f"{project_ids['Smart Agriculture Monitoring']}_IoT Engineer"], 'student_id': user_ids['neha.gupta@iitkgp.ac.in'], 'message': 'As a biotechnology student, I am very interested in AgriTech. I have experience with IoT sensors.', 'status': 'accepted'},
+        # Smart Agriculture - Software Developer position (filled)
+        {'project_id': project_ids['Smart Agriculture Monitoring'], 'position_id': position_ids[f"{project_ids['Smart Agriculture Monitoring']}_Software Developer"], 'student_id': user_ids['neha.gupta@iitkgp.ac.in'], 'message': 'As a biotechnology student, I am very interested in AgriTech. I have experience with IoT sensors.', 'status': 'accepted'},
         
         # Smart Agriculture - Full Stack Developer position
         {'project_id': project_ids['Smart Agriculture Monitoring'], 'position_id': position_ids[f"{project_ids['Smart Agriculture Monitoring']}_Full Stack Developer"], 'student_id': user_ids['sneha.reddy@iitkgp.ac.in'], 'message': 'Experienced with MERN stack. Can build real-time dashboards with Chart.js.', 'status': 'pending'},
         
-        # Urban Infrastructure - GIS Specialist position
-        {'project_id': project_ids['Urban Infrastructure Planning Tool'], 'position_id': position_ids[f"{project_ids['Urban Infrastructure Planning Tool']}_GIS Specialist"], 'student_id': user_ids['rohan.desai@iitkgp.ac.in'], 'message': 'I am a civil engineering student with experience in GIS and AutoCAD. Very interested in urban planning.', 'status': 'pending'},
+        # Urban Infrastructure - Research Analyst position
+        {'project_id': project_ids['Urban Infrastructure Planning Tool'], 'position_id': position_ids[f"{project_ids['Urban Infrastructure Planning Tool']}_Research Analyst"], 'student_id': user_ids['rohan.desai@iitkgp.ac.in'], 'message': 'I am a civil engineering student with experience in GIS and AutoCAD. Very interested in urban planning.', 'status': 'pending'},
         
-        # Chemical Process - Process Engineer position (filled)
-        {'project_id': project_ids['Chemical Process Optimization Platform'], 'position_id': position_ids[f"{project_ids['Chemical Process Optimization Platform']}_Process Engineer"], 'student_id': user_ids['divya.nair@iitkgp.ac.in'], 'message': 'I have strong background in chemical engineering and Python. Interested in process optimization.', 'status': 'accepted'},
+        # Chemical Process - Consultant position (filled)
+        {'project_id': project_ids['Chemical Process Optimization Platform'], 'position_id': position_ids[f"{project_ids['Chemical Process Optimization Platform']}_Consultant"], 'student_id': user_ids['divya.nair@iitkgp.ac.in'], 'message': 'I have strong background in chemical engineering and Python. Interested in process optimization.', 'status': 'accepted'},
         
-        # Robotics - Robotics Engineer position
-        {'project_id': project_ids['Robotics for Manufacturing Automation'], 'position_id': position_ids[f"{project_ids['Robotics for Manufacturing Automation']}_Robotics Engineer"], 'student_id': user_ids['arjun.mehta@iitkgp.ac.in'], 'message': 'I have experience with ROS and robotics projects. Very passionate about automation and manufacturing.', 'status': 'pending'},
+        # Robotics - Software Developer position
+        {'project_id': project_ids['Robotics for Manufacturing Automation'], 'position_id': position_ids[f"{project_ids['Robotics for Manufacturing Automation']}_Software Developer"], 'student_id': user_ids['arjun.mehta@iitkgp.ac.in'], 'message': 'I have experience with ROS and robotics projects. Very passionate about automation and manufacturing.', 'status': 'pending'},
         
-        # Robotics - Computer Vision Engineer position
-        {'project_id': project_ids['Robotics for Manufacturing Automation'], 'position_id': position_ids[f"{project_ids['Robotics for Manufacturing Automation']}_Computer Vision Engineer"], 'student_id': user_ids['sneha.reddy@iitkgp.ac.in'], 'message': 'Worked on OpenCV projects for object detection and quality inspection systems.', 'status': 'pending'}
+        # Robotics - AI Engineer position
+        {'project_id': project_ids['Robotics for Manufacturing Automation'], 'position_id': position_ids[f"{project_ids['Robotics for Manufacturing Automation']}_AI Engineer"], 'student_id': user_ids['sneha.reddy@iitkgp.ac.in'], 'message': 'Worked on OpenCV projects for object detection and quality inspection systems.', 'status': 'pending'}
     ]
     
     for app in project_applications:

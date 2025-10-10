@@ -5,6 +5,7 @@ import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Loader2, Briefcase, ArrowRight, BookOpen, UserPlus, Search, TrendingUp, Clock, CheckCircle, MessageCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { CompletedProjectCard } from '../components/CompletedProjectCard'
 
 interface ProjectItem {
   id: number
@@ -35,10 +36,25 @@ interface DashboardStats {
   pending_applications: number
 }
 
+interface CompletedProject {
+  application_id: number
+  feedback: string
+  completed_at: string
+  applied_at: string
+  project_id: number
+  title: string
+  description: string
+  category: string
+  status: string
+  alumni_name: string
+  alumni_email: string
+}
+
 export const StudentDashboard: React.FC = () => {
   const { token, user, isLoading } = useAuth()
   const [appliedProjects, setAppliedProjects] = useState<ProjectItem[]>([])
   const [mentorshipRequests, setMentorshipRequests] = useState<MentorshipRequest[]>([])
+  const [completedProjects, setCompletedProjects] = useState<CompletedProject[]>([])
   const [stats, setStats] = useState<DashboardStats>({
     applied_projects: 0,
     mentorship_requests: 0,
@@ -83,6 +99,15 @@ export const StudentDashboard: React.FC = () => {
             ...prev,
             mentorship_requests: mentorshipData.length
           }))
+        }
+
+        // Load completed projects with feedback
+        const completedRes = await fetch('https://alumconnect-s4c7.onrender.com/api/students/completed-projects', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (completedRes.ok) {
+          const completedData = await completedRes.json()
+          setCompletedProjects(completedData)
         }
       } finally {
         setLoading(false)
@@ -237,11 +262,15 @@ export const StudentDashboard: React.FC = () => {
                   <>
                     {appliedProjects.slice(0, 3).map((project) => (
                       <div key={project.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                        <div className={`w-3 h-3 rounded-full ${
+                          project.status === 'completed' ? 'bg-green-500' : 
+                          project.status === 'active' ? 'bg-blue-500 animate-pulse' : 
+                          'bg-gray-400'
+                        }`}></div>
                         <div className="flex-1">
                           <p className="text-sm font-semibold text-gray-900">Applied to {project.title}</p>
                           <p className="text-xs text-gray-500">
-                            {new Date(project.applied_at).toLocaleDateString()}
+                            {new Date(project.applied_at).toLocaleDateString()} • {project.status === 'active' ? 'Ongoing' : project.status === 'completed' ? 'Completed' : project.status}
                           </p>
                         </div>
                         <Badge variant={project.application_status === 'accepted' ? 'default' : 'secondary'} className="capitalize">
@@ -294,10 +323,16 @@ export const StudentDashboard: React.FC = () => {
                     <div key={project.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                       <div>
                         <p className="font-semibold text-gray-900">{project.title}</p>
-                        <p className="text-sm text-gray-500">{project.category}</p>
+                        <p className="text-sm text-gray-500">{project.category} • {project.status === 'active' ? 'Ongoing' : project.status === 'completed' ? 'Completed' : project.status}</p>
                       </div>
                       <div className="flex items-center space-x-3">
-                        <Badge variant={project.application_status === 'accepted' ? 'default' : 'secondary'} className="capitalize">
+                        <Badge 
+                          variant={project.application_status === 'accepted' ? 'default' : 'secondary'} 
+                          className={`capitalize ${
+                            project.status === 'completed' ? 'bg-green-500' : 
+                            project.status === 'active' ? 'bg-blue-500' : ''
+                          }`}
+                        >
                           {project.application_status}
                         </Badge>
                         <Button variant="ghost" size="sm" asChild className="hover:bg-gray-200">
@@ -363,6 +398,37 @@ export const StudentDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Completed Projects Section */}
+        {completedProjects.length > 0 && (
+          <div className="mt-8">
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl font-bold text-gray-900 flex items-center">
+                      <CheckCircle className="h-6 w-6 mr-2 text-green-600" />
+                      Completed Projects
+                    </CardTitle>
+                    <CardDescription className="text-gray-600">
+                      Projects you've completed with feedback from alumni
+                    </CardDescription>
+                  </div>
+                  <Badge className="bg-green-500 text-white">
+                    {completedProjects.length} Completed
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {completedProjects.map((project) => (
+                    <CompletedProjectCard key={project.application_id} project={project} />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   )

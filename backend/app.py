@@ -373,6 +373,20 @@ def init_db():
     except:
         pass
     
+    # Add feedback columns to project_applications table
+    try:
+        cursor.execute('ALTER TABLE project_applications ADD COLUMN feedback TEXT')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE project_applications ADD COLUMN completed_at TIMESTAMP')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE project_applications ADD COLUMN is_completed BOOLEAN DEFAULT 0')
+    except:
+        pass
+    
     # User skills table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS user_skills (
@@ -608,6 +622,189 @@ def get_projects():
             })
         
         return jsonify(projects), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+# Get recommended projects for a student based on their skills
+@app.route('/api/projects/recommended', methods=['GET'])
+@jwt_required()
+def get_recommended_projects():
+    user_id = get_user_id_from_jwt()
+    
+    conn = sqlite3.connect('launchpad.db')
+    cursor = conn.cursor()
+    
+    try:
+        # Get user's skills
+        cursor.execute('''
+            SELECT skill_name FROM user_skills WHERE user_id = ?
+        ''', (user_id,))
+        user_skills = [row[0].lower() for row in cursor.fetchall()]
+        
+        # Get user's department and specialization for additional matching
+        cursor.execute('''
+            SELECT department, specialization, branch FROM users WHERE id = ?
+        ''', (user_id,))
+        user_data = cursor.fetchone()
+        user_keywords = []
+        if user_data:
+            if user_data[0]:  # department
+                user_keywords.append(user_data[0].lower())
+            if user_data[1]:  # specialization
+                user_keywords.append(user_data[1].lower())
+            if user_data[2]:  # branch
+                user_keywords.append(user_data[2].lower())
+        
+        # Get all active projects
+        cursor.execute('''
+            SELECT p.id, p.title, p.description, p.category, p.status, p.team_members, p.tags, p.skills_required, 
+                   p.stipend, p.duration, p.location, p.work_type, p.created_at, u.name as created_by_name, p.is_recruiting,
+                   p.images, p.project_links, p.jd_pdf, p.created_by, p.contact_details, p.team_roles, p.partners, p.funding, p.highlights
+            FROM projects p
+            LEFT JOIN users u ON p.created_by = u.id
+            WHERE p.status = 'active'
+            ORDER BY p.created_at DESC
+        ''')
+        
+        projects_with_scores = []
+        for row in cursor.fetchall():
+            project_id = row[0]
+            
+            # Check if user has already applied
+            cursor.execute('SELECT id FROM project_applications WHERE student_id = ? AND project_id = ?', 
+                          (user_id, project_id))
+            if cursor.fetchone():
+                continue  # Skip projects already applied to
+            
+            # Calculate match score
+            skills_required = json.loads(row[7]) if row[7] else []
+            tags = json.loads(row[6]) if row[6] else []
+            title = row[1].lower()
+            description = row[2].lower()
+            category = row[3].lower()
+            
+            score = 0
+            matched_skills = []
+            
+            # Match skills (highest weight)
+            for skill in user_skills:
+                for req_skill in skills_required:
+                    if skill in req_skill.lower() or req_skill.lower() in skill:
+                        score += 10
+                        matched_skills.append(req_skill)
+                        break
+            
+            # Match tags
+            for skill in user_skills:
+                for tag in tags:
+                    if skill in tag.lower() or tag.lower() in skill:
+                        score += 5
+                        break
+            
+            # Match keywords in title and description
+            for keyword in user_keywords:
+                if keyword in title:
+                    score += 3
+                if keyword in description:
+                    score += 2
+                if keyword in category:
+                    score += 3
+            
+            # Match skills in title/description
+            for skill in user_skills:
+                if skill in title:
+                    score += 4
+                if skill in description:
+                    score += 2
+            
+            # Only include projects with some relevance
+            if score > 0:
+                project_data = {
+                    'id': project_id,
+                    'title': row[1],
+                    'description': row[2],
+                    'category': row[3],
+                    'status': row[4],
+                    'team_members': json.loads(row[5]) if row[5] else [],
+                    'tags': tags,
+                    'skills_required': skills_required,
+                    'stipend': row[8],
+                    'duration': row[9],
+                    'location': row[10],
+                    'work_type': row[11],
+                    'created_at': row[12],
+                    'created_by_name': row[13],
+                    'is_recruiting': bool(row[14]) if row[14] is not None else True,
+                    'images': json.loads(row[15]) if row[15] else [],
+                    'project_links': json.loads(row[16]) if row[16] else [],
+                    'jd_pdf': row[17],
+                    'created_by_id': row[18],
+                    'contact_details': json.loads(row[19]) if row[19] else {},
+                    'team_roles': json.loads(row[20]) if row[20] else [],
+                    'partners': json.loads(row[21]) if row[21] else [],
+                    'funding': row[22],
+                    'highlights': json.loads(row[23]) if row[23] else [],
+                    'match_score': score,
+                    'matched_skills': list(set(matched_skills))
+                }
+                projects_with_scores.append(project_data)
+        
+        # Sort by match score (highest first)
+        projects_with_scores.sort(key=lambda x: x['match_score'], reverse=True)
+        
+        # If no matches, return recent active projects
+        if not projects_with_scores:
+            cursor.execute('''
+                SELECT p.id, p.title, p.description, p.category, p.status, p.team_members, p.tags, p.skills_required, 
+                       p.stipend, p.duration, p.location, p.work_type, p.created_at, u.name as created_by_name, p.is_recruiting,
+                       p.images, p.project_links, p.jd_pdf, p.created_by, p.contact_details, p.team_roles, p.partners, p.funding, p.highlights
+                FROM projects p
+                LEFT JOIN users u ON p.created_by = u.id
+                WHERE p.status = 'active'
+                ORDER BY p.created_at DESC
+                LIMIT 10
+            ''')
+            
+            for row in cursor.fetchall():
+                project_id = row[0]
+                cursor.execute('SELECT id FROM project_applications WHERE student_id = ? AND project_id = ?', 
+                              (user_id, project_id))
+                if cursor.fetchone():
+                    continue
+                    
+                projects_with_scores.append({
+                    'id': project_id,
+                    'title': row[1],
+                    'description': row[2],
+                    'category': row[3],
+                    'status': row[4],
+                    'team_members': json.loads(row[5]) if row[5] else [],
+                    'tags': json.loads(row[6]) if row[6] else [],
+                    'skills_required': json.loads(row[7]) if row[7] else [],
+                    'stipend': row[8],
+                    'duration': row[9],
+                    'location': row[10],
+                    'work_type': row[11],
+                    'created_at': row[12],
+                    'created_by_name': row[13],
+                    'is_recruiting': bool(row[14]) if row[14] is not None else True,
+                    'images': json.loads(row[15]) if row[15] else [],
+                    'project_links': json.loads(row[16]) if row[16] else [],
+                    'jd_pdf': row[17],
+                    'created_by_id': row[18],
+                    'contact_details': json.loads(row[19]) if row[19] else {},
+                    'team_roles': json.loads(row[20]) if row[20] else [],
+                    'partners': json.loads(row[21]) if row[21] else [],
+                    'funding': row[22],
+                    'highlights': json.loads(row[23]) if row[23] else [],
+                    'match_score': 0,
+                    'matched_skills': []
+                })
+        
+        return jsonify(projects_with_scores), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -1362,7 +1559,8 @@ def get_student_applied_projects():
 
         cursor.execute('''
             SELECT p.id, p.title, p.description, p.category, p.status, p.team_members, p.tags, p.created_at,
-                   u.name as created_by_name, pa.status as application_status, pa.created_at as applied_at
+                   u.name as created_by_name, pa.status as application_status, pa.created_at as applied_at,
+                   pa.is_completed, pa.completed_at, pa.feedback
             FROM project_applications pa
             JOIN projects p ON pa.project_id = p.id
             LEFT JOIN users u ON p.created_by = u.id
@@ -1383,7 +1581,10 @@ def get_student_applied_projects():
                 'created_at': row[7],
                 'created_by_name': row[8],
                 'application_status': row[9],
-                'applied_at': row[10]
+                'applied_at': row[10],
+                'is_completed': bool(row[11]) if row[11] is not None else False,
+                'completed_at': row[12],
+                'feedback': row[13]
             })
 
         return jsonify(results), 200
@@ -1876,7 +2077,8 @@ def get_alumni_project_applications():
             SELECT pa.id, pa.message, pa.status, pa.created_at,
                    p.title as project_title, p.id as project_id,
                    pa.student_id, u.name as student_name, u.email as student_email,
-                   pa.position_id, pp.title as position_title
+                   pa.position_id, pp.title as position_title,
+                   pa.is_completed, pa.completed_at, pa.feedback
             FROM project_applications pa
             JOIN projects p ON pa.project_id = p.id
             JOIN users u ON pa.student_id = u.id
@@ -1898,7 +2100,10 @@ def get_alumni_project_applications():
                 'student_name': row[7],
                 'student_email': row[8],
                 'position_id': row[9],
-                'position_title': row[10]
+                'position_title': row[10],
+                'is_completed': bool(row[11]) if row[11] is not None else False,
+                'completed_at': row[12],
+                'feedback': row[13]
             })
         
         return jsonify(applications), 200
@@ -1938,7 +2143,8 @@ def get_project_applications(project_id):
         cursor.execute('''
             SELECT pa.id, pa.message, pa.status, pa.created_at,
                    pa.student_id, u.name as student_name, u.email as student_email,
-                   pa.position_id, pp.title as position_title
+                   pa.position_id, pp.title as position_title,
+                   pa.is_completed, pa.completed_at, pa.feedback
             FROM project_applications pa
             JOIN users u ON pa.student_id = u.id
             LEFT JOIN project_positions pp ON pa.position_id = pp.id
@@ -1957,10 +2163,140 @@ def get_project_applications(project_id):
                 'student_name': row[5],
                 'student_email': row[6],
                 'position_id': row[7],
-                'position_title': row[8]
+                'position_title': row[8],
+                'is_completed': bool(row[9]) if row[9] is not None else False,
+                'completed_at': row[10],
+                'feedback': row[11]
             })
         
         return jsonify(applications), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+# Submit feedback and mark project as completed for a student
+@app.route('/api/project-applications/<int:application_id>/complete', methods=['POST'])
+@jwt_required()
+def complete_project_application(application_id):
+    user_id = get_user_id_from_jwt()
+    data = request.get_json()
+    
+    feedback = data.get('feedback', '')
+    
+    conn = sqlite3.connect('launchpad.db')
+    cursor = conn.cursor()
+    
+    try:
+        # Check if user is alumni
+        cursor.execute('SELECT role FROM users WHERE id = ?', (user_id,))
+        user_role = cursor.fetchone()
+        
+        if not user_role or user_role[0] != 'alumni':
+            return jsonify({'error': 'Only alumni can mark projects as completed'}), 403
+        
+        # Get application details and verify ownership
+        cursor.execute('''
+            SELECT pa.student_id, pa.project_id, p.created_by, pa.status
+            FROM project_applications pa
+            JOIN projects p ON pa.project_id = p.id
+            WHERE pa.id = ?
+        ''', (application_id,))
+        
+        application = cursor.fetchone()
+        
+        print(f"DEBUG: Application {application_id} - Found: {application}")
+        print(f"DEBUG: User ID: {user_id}, Project Owner: {application[2] if application else 'N/A'}")
+        
+        if not application:
+            return jsonify({'error': 'Application not found'}), 404
+        
+        if application[2] != user_id:
+            return jsonify({'error': 'You can only complete applications for your own projects'}), 403
+        
+        if application[3] != 'accepted':
+            return jsonify({'error': f'Only accepted applications can be marked as completed. Current status: {application[3]}'}), 400
+        
+        # Update application with feedback and completion status
+        try:
+            cursor.execute('''
+                UPDATE project_applications 
+                SET feedback = ?, is_completed = 1, completed_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ''', (feedback, application_id))
+        except sqlite3.OperationalError as e:
+            # Column might not exist, try to add it
+            if 'no such column' in str(e).lower():
+                try:
+                    cursor.execute('ALTER TABLE project_applications ADD COLUMN feedback TEXT')
+                    cursor.execute('ALTER TABLE project_applications ADD COLUMN completed_at TIMESTAMP')
+                    cursor.execute('ALTER TABLE project_applications ADD COLUMN is_completed BOOLEAN DEFAULT 0')
+                    conn.commit()
+                    # Retry the update
+                    cursor.execute('''
+                        UPDATE project_applications 
+                        SET feedback = ?, is_completed = 1, completed_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    ''', (feedback, application_id))
+                except Exception as alter_error:
+                    return jsonify({'error': f'Database schema error: {str(alter_error)}'}), 500
+            else:
+                raise
+        
+        conn.commit()
+        
+        return jsonify({
+            'message': 'Project marked as completed successfully',
+            'application_id': application_id,
+            'feedback': feedback
+        }), 200
+        
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+# Get feedback for a student's completed projects
+@app.route('/api/students/completed-projects', methods=['GET'])
+@jwt_required()
+def get_student_completed_projects():
+    user_id = get_user_id_from_jwt()
+    
+    conn = sqlite3.connect('launchpad.db')
+    cursor = conn.cursor()
+    
+    try:
+        # Get completed projects with feedback
+        cursor.execute('''
+            SELECT pa.id, pa.feedback, pa.completed_at, pa.created_at as applied_at,
+                   p.id as project_id, p.title, p.description, p.category, p.status,
+                   u.name as alumni_name, u.email as alumni_email
+            FROM project_applications pa
+            JOIN projects p ON pa.project_id = p.id
+            JOIN users u ON p.created_by = u.id
+            WHERE pa.student_id = ? AND pa.is_completed = 1
+            ORDER BY pa.completed_at DESC
+        ''', (user_id,))
+        
+        completed_projects = []
+        for row in cursor.fetchall():
+            completed_projects.append({
+                'application_id': row[0],
+                'feedback': row[1],
+                'completed_at': row[2],
+                'applied_at': row[3],
+                'project_id': row[4],
+                'title': row[5],
+                'description': row[6],
+                'category': row[7],
+                'status': row[8],
+                'alumni_name': row[9],
+                'alumni_email': row[10]
+            })
+        
+        return jsonify(completed_projects), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -1977,21 +2313,48 @@ def check_application_status(project_id):
     cursor = conn.cursor()
     
     try:
+        # Get all applications for this project by this student (grouped by position)
         cursor.execute('''
-            SELECT id, status, created_at FROM project_applications 
+            SELECT id, position_id, status, created_at FROM project_applications 
             WHERE project_id = ? AND student_id = ?
         ''', (project_id, user_id))
-        application = cursor.fetchone()
+        applications = cursor.fetchall()
         
-        if application:
+        if applications:
+            # Return applications grouped by position
+            applications_by_position = {}
+            
+            # Get all positions for this project to handle old applications
+            cursor.execute('SELECT id FROM project_positions WHERE project_id = ?', (project_id,))
+            position_ids = [str(row[0]) for row in cursor.fetchall()]
+            
+            for app in applications:
+                if app[1]:  # Has position_id
+                    position_id = str(app[1])
+                else:  # Old application without position_id - assign to all positions
+                    # For backward compatibility, add this application to all positions
+                    for pos_id in position_ids:
+                        applications_by_position[pos_id] = {
+                            'application_id': app[0],
+                            'status': app[2],
+                            'applied_at': app[3],
+                            'is_legacy': True  # Flag to indicate this is an old application
+                        }
+                    continue
+                
+                applications_by_position[position_id] = {
+                    'application_id': app[0],
+                    'status': app[2],
+                    'applied_at': app[3],
+                    'is_legacy': False
+                }
+            
             return jsonify({
                 'has_applied': True,
-                'application_id': application[0],
-                'status': application[1],
-                'applied_at': application[2]
+                'applications': applications_by_position
             }), 200
         else:
-            return jsonify({'has_applied': False}), 200
+            return jsonify({'has_applied': False, 'applications': {}}), 200
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -2006,10 +2369,23 @@ def create_project_application():
     data = request.get_json()
 
     project_id = data.get('project_id')
+    position_id = data.get('position_id')
     message = data.get('message', '')
 
     if not project_id:
         return jsonify({'error': 'Project ID is required'}), 400
+    
+    # Position ID is strongly recommended but not strictly required for backward compatibility
+    if not position_id:
+        print(f"WARNING: Application submitted without position_id for project {project_id}")
+        # Check if project has positions - if so, require position_id
+        cursor = sqlite3.connect('launchpad.db').cursor()
+        cursor.execute('SELECT COUNT(*) FROM project_positions WHERE project_id = ? AND is_active = 1', (project_id,))
+        active_positions = cursor.fetchone()[0]
+        cursor.close()
+        
+        if active_positions > 0:
+            return jsonify({'error': 'Position ID is required. Please select a specific position to apply for.'}), 400
 
     conn = sqlite3.connect('launchpad.db')
     cursor = conn.cursor()
@@ -2020,25 +2396,32 @@ def create_project_application():
         project = cursor.fetchone()
         if not project:
             return jsonify({'error': 'Project not found'}), 404
+        
+        # Check if position exists and is active
+        cursor.execute('SELECT id, is_active FROM project_positions WHERE id = ? AND project_id = ?', (position_id, project_id))
+        position = cursor.fetchone()
+        if not position:
+            return jsonify({'error': 'Position not found'}), 404
+        if not position[1]:
+            return jsonify({'error': 'This position is no longer accepting applications'}), 400
 
-        # Check if already applied
+        # Check if already applied to this specific position
         cursor.execute('''
             SELECT id FROM project_applications 
-            WHERE project_id = ? AND student_id = ?
-        ''', (project_id, user_id))
+            WHERE project_id = ? AND student_id = ? AND position_id = ?
+        ''', (project_id, user_id, position_id))
         existing_application = cursor.fetchone()
         if existing_application:
-            return jsonify({'error': 'You have already applied to this project'}), 400
+            return jsonify({'error': 'You have already applied to this position'}), 400
 
         # Insert application
-        position_id = data.get('position_id')
         cursor.execute('''
             INSERT INTO project_applications (project_id, student_id, position_id, message, status, created_at)
             VALUES (?, ?, ?, ?, ?, datetime('now'))
         ''', (project_id, user_id, position_id, message, 'pending'))
 
         conn.commit()
-        return jsonify({'message': 'Application submitted successfully'}), 201
+        return jsonify({'message': 'Application submitted successfully', 'position_id': position_id}), 201
 
     except Exception as e:
         conn.rollback()

@@ -315,33 +315,67 @@ export const CreateProjectPage: React.FC = () => {
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div>
-                              <Label className="text-sm">Position Title</Label>
-                              <Input
-                                value={position.title}
-                                onChange={(e) => {
-                                  const newPositions = [...positions]
-                                  newPositions[index].title = e.target.value
-                                  setPositions(newPositions)
-                                }}
-                                placeholder="e.g., Frontend Developer"
-                                className="h-10"
-                              />
-                            </div>
-                            <div>
-                              <Label className="text-sm">Number of Openings</Label>
-                              <Input
-                                type="number"
-                                min="1"
-                                value={position.count}
-                                onChange={(e) => {
-                                  const newPositions = [...positions]
-                                  newPositions[index].count = parseInt(e.target.value) || 1
-                                  setPositions(newPositions)
-                                }}
-                                className="h-10"
-                              />
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-sm">Role Type</Label>
+                                <Select
+                                  value={position.title}
+                                  onValueChange={(value) => {
+                                    const newPositions = [...positions]
+                                    newPositions[index].title = value
+                                    setPositions(newPositions)
+                                  }}
+                                >
+                                  <SelectTrigger className="h-10">
+                                    <SelectValue placeholder="Select a role" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Software Developer">Software Developer</SelectItem>
+                                    <SelectItem value="Frontend Developer">Frontend Developer</SelectItem>
+                                    <SelectItem value="Backend Developer">Backend Developer</SelectItem>
+                                    <SelectItem value="Full Stack Developer">Full Stack Developer</SelectItem>
+                                    <SelectItem value="Mobile App Developer">Mobile App Developer</SelectItem>
+                                    <SelectItem value="Data Analyst">Data Analyst</SelectItem>
+                                    <SelectItem value="Data Scientist">Data Scientist</SelectItem>
+                                    <SelectItem value="Machine Learning Engineer">Machine Learning Engineer</SelectItem>
+                                    <SelectItem value="AI Engineer">AI Engineer</SelectItem>
+                                    <SelectItem value="DevOps Engineer">DevOps Engineer</SelectItem>
+                                    <SelectItem value="UI/UX Designer">UI/UX Designer</SelectItem>
+                                    <SelectItem value="Product Designer">Product Designer</SelectItem>
+                                    <SelectItem value="Graphic Designer">Graphic Designer</SelectItem>
+                                    <SelectItem value="Product Manager">Product Manager</SelectItem>
+                                    <SelectItem value="Project Manager">Project Manager</SelectItem>
+                                    <SelectItem value="Business Analyst">Business Analyst</SelectItem>
+                                    <SelectItem value="Consultant">Consultant</SelectItem>
+                                    <SelectItem value="Marketing Specialist">Marketing Specialist</SelectItem>
+                                    <SelectItem value="Content Writer">Content Writer</SelectItem>
+                                    <SelectItem value="Research Analyst">Research Analyst</SelectItem>
+                                    <SelectItem value="QA Engineer">QA Engineer</SelectItem>
+                                    <SelectItem value="Cybersecurity Analyst">Cybersecurity Analyst</SelectItem>
+                                    <SelectItem value="Blockchain Developer">Blockchain Developer</SelectItem>
+                                    <SelectItem value="Cloud Architect">Cloud Architect</SelectItem>
+                                    <SelectItem value="Mentor">Mentor</SelectItem>
+                                    <SelectItem value="Advisor">Advisor</SelectItem>
+                                    <SelectItem value="Intern">Intern</SelectItem>
+                                    <SelectItem value="Other">Other</SelectItem>
+                                </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <Label className="text-sm">Number of Openings</Label>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={position.count}
+                                  onChange={(e) => {
+                                    const newPositions = [...positions]
+                                    newPositions[index].count = parseInt(e.target.value) || 1
+                                    setPositions(newPositions)
+                                  }}
+                                  className="h-10"
+                                />
+                              </div>
                             </div>
                           </div>
                           <div>

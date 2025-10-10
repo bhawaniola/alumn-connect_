@@ -4,8 +4,9 @@ import { useAuth } from '../contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
-import { Loader2, User, Check, X, Mail, ArrowLeft, Eye } from 'lucide-react'
+import { Loader2, User, Check, X, Mail, ArrowLeft, Eye, CheckCircle } from 'lucide-react'
 import { ProfileModal } from '../components/ProfileModal'
+import { FeedbackModal } from '../components/FeedbackModal'
 
 interface ProjectApplication {
   id: number
@@ -15,6 +16,9 @@ interface ProjectApplication {
   student_name: string
   student_email: string
   student_id?: number
+  is_completed?: boolean
+  completed_at?: string
+  feedback?: string
 }
 
 interface Project {
@@ -32,6 +36,17 @@ export const ProjectApplicationsPage: React.FC = () => {
   const [processing, setProcessing] = useState<number | null>(null)
   const [profileUserId, setProfileUserId] = useState<number | null>(null)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [feedbackModal, setFeedbackModal] = useState<{
+    isOpen: boolean
+    applicationId: number | null
+    studentName: string
+    projectTitle: string
+  }>({
+    isOpen: false,
+    applicationId: null,
+    studentName: '',
+    projectTitle: ''
+  })
 
   const openProfileForApplicant = async (app: ProjectApplication) => {
     if (app.student_id) {
@@ -257,12 +272,20 @@ export const ProjectApplicationsPage: React.FC = () => {
                           <CardTitle className="text-lg">Application from {application.student_name}</CardTitle>
                           <CardDescription>{application.student_email}</CardDescription>
                         </div>
-                        <Badge 
-                          variant={application.status === 'accepted' ? 'default' : 'secondary'}
-                          className="capitalize"
-                        >
-                          {application.status}
-                        </Badge>
+                        <div className="flex items-center space-x-2">
+                          <Badge 
+                            variant={application.status === 'accepted' ? 'default' : 'secondary'}
+                            className="capitalize"
+                          >
+                            {application.status}
+                          </Badge>
+                          {application.is_completed && (
+                            <Badge className="bg-green-500">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Completed
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -284,8 +307,13 @@ export const ProjectApplicationsPage: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-muted-foreground">
                             Applied on {new Date(application.created_at).toLocaleDateString()}
+                            {application.is_completed && application.completed_at && (
+                              <span className="ml-2 text-green-600">
+                                • Completed on {new Date(application.completed_at).toLocaleDateString()}
+                              </span>
+                            )}
                           </span>
-                          <div>
+                          <div className="flex space-x-2">
                             <Button
                               size="sm"
                               variant="outline"
@@ -294,8 +322,30 @@ export const ProjectApplicationsPage: React.FC = () => {
                               <Eye className="mr-1 h-3 w-3" />
                               View Profile
                             </Button>
+                            {application.status === 'accepted' && !application.is_completed && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                                onClick={() => setFeedbackModal({
+                                  isOpen: true,
+                                  applicationId: application.id,
+                                  studentName: application.student_name,
+                                  projectTitle: project?.title || ''
+                                })}
+                              >
+                                <CheckCircle className="mr-1 h-3 w-3" />
+                                Mark as Completed
+                              </Button>
+                            )}
                           </div>
                         </div>
+                        {application.is_completed && application.feedback && (
+                          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <p className="text-xs font-medium text-green-800 mb-1">Your Feedback:</p>
+                            <p className="text-sm text-gray-700">{application.feedback}</p>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -319,6 +369,37 @@ export const ProjectApplicationsPage: React.FC = () => {
           userId={profileUserId}
           isOpen={isProfileOpen}
           onClose={() => { setIsProfileOpen(false); setProfileUserId(null) }}
+        />
+      )}
+
+      {/* Feedback Modal */}
+      {feedbackModal.applicationId && (
+        <FeedbackModal
+          isOpen={feedbackModal.isOpen}
+          onClose={() => setFeedbackModal({
+            isOpen: false,
+            applicationId: null,
+            studentName: '',
+            projectTitle: ''
+          })}
+          applicationId={feedbackModal.applicationId}
+          studentName={feedbackModal.studentName}
+          projectTitle={feedbackModal.projectTitle}
+          onSuccess={async () => {
+            // Reload applications to show updated status
+            if (!token || !id) return
+            try {
+              const res = await fetch(`https://alumconnect-s4c7.onrender.com/api/projects/${id}/applications`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+              if (res.ok) {
+                const data = await res.json()
+                setApplications(data)
+              }
+            } catch (error) {
+              console.error('Error reloading applications:', error)
+            }
+          }}
         />
       )}
     </div>

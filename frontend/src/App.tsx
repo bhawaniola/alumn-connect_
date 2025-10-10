@@ -23,6 +23,7 @@ import { MessagesPage } from './pages/MessagesPage'
 import { ChatPage } from './pages/ChatPage'
 import { AlumniProjectApplicationsPage } from './pages/AlumniProjectApplicationsPage'
 import { ProjectApplicationsPage } from './pages/ProjectApplicationsPage'
+import { StudentApplicationsPage } from './pages/StudentApplicationsPage'
 import { DashboardRouter } from './pages/DashboardRouter'
 import { MentorsPage } from './pages/MentorsPage'
 import { FindMentorsPage } from './pages/FindMentorsPage'
@@ -52,6 +53,7 @@ function App() {
             <Route path="/blog/:id" element={<BlogPostPage />} />
             <Route path="/alumni/blogs/:id/edit" element={<EditBlogPage />} />
             <Route path="/student-dashboard" element={<StudentDashboard />} />
+            <Route path="/student/applications" element={<StudentApplicationsPage />} />
             <Route path="/founders-dashboard" element={<AlumniDashboard />} />
             <Route path="/dashboard" element={<DashboardRouter />} />
             <Route path="/profile" element={<ProfilePage />} />

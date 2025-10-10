@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button'
 import { Textarea } from '../components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog'
 import { Avatar, AvatarFallback } from '../components/ui/avatar'
-import { Briefcase, Users, Loader2, Send, CheckCircle, ArrowLeft, MapPin, Clock, DollarSign, UserCheck, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Edit, Mail, Phone, Globe, Award, TrendingUp, Handshake, Star, ChevronDown, Calendar, Heart } from 'lucide-react'
+import { Briefcase, Users, Loader2, Send, CheckCircle, ArrowLeft, MapPin, Clock, DollarSign, UserCheck, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Edit, Mail, Phone, Globe, Award, TrendingUp, Handshake, Star, ChevronDown, Calendar, Heart, X } from 'lucide-react'
 import { ProfileModal } from '../components/ProfileModal'
 
 interface Position {
@@ -61,18 +61,18 @@ interface Project {
 
 export const ProjectDetailPage: React.FC = () => {
   const { id } = useParams()
-  const { user } = useAuth()
+  const { user, token } = useAuth()
   const navigate = useNavigate()
   const [project, setProject] = useState<Project | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [applicationMessage, setApplicationMessage] = useState('')
   const [isApplying, setIsApplying] = useState(false)
   const [applicationSubmitted, setApplicationSubmitted] = useState(false)
-  const [hasApplied, setHasApplied] = useState(false)
-  const [applicationStatus, setApplicationStatus] = useState<string | null>(null)
+  const [positionApplications, setPositionApplications] = useState<Record<string, { application_id: number, status: string, applied_at: string, is_legacy?: boolean }>>({})
   const [profileModalUserId, setProfileModalUserId] = useState<number | null>(null)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null)
+  const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false)
   const [carouselIndex, setCarouselIndex] = useState(0)
   const [related, setRelated] = useState<Project[]>([])
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
@@ -81,11 +81,27 @@ export const ProjectDetailPage: React.FC = () => {
   useEffect(() => {
     if (id) {
       fetchProject()
-      if (user && user.role === 'student') {
-        checkApplicationStatus()
-      }
     }
-  }, [id, user])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
+  useEffect(() => {
+    console.log('🔄 useEffect triggered - id:', id, 'user:', user?.email, 'role:', user?.role, 'token:', !!token)
+    if (id && user && user.role === 'student' && token) {
+      console.log('🎯 Checking application status - User:', user.email, 'Project:', id)
+      checkApplicationStatus()
+    } else {
+      console.log('⚠️ Skipping application status check:', { hasId: !!id, hasUser: !!user, isStudent: user?.role === 'student', hasToken: !!token })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, user, token])
+
+  // Refetch application status after successful submission
+  useEffect(() => {
+    if (applicationSubmitted && user && user.role === 'student') {
+      checkApplicationStatus()
+    }
+  }, [applicationSubmitted])
 
   useEffect(() => {
     if (project?.team_roles && project.team_roles.length > 0) {
@@ -116,6 +132,8 @@ export const ProjectDetailPage: React.FC = () => {
       const response = await fetch(`https://alumconnect-s4c7.onrender.com/api/projects/${id}`)
       if (response.ok) {
         const data = await response.json()
+        console.log('Project data:', data)
+        console.log('Project positions:', data.positions)
         setProject(data)
         try {
           const rel = await fetch(`https://alumconnect-s4c7.onrender.com/api/projects?category=${encodeURIComponent(data.category)}`)
@@ -137,24 +155,75 @@ export const ProjectDetailPage: React.FC = () => {
   }
 
   const checkApplicationStatus = async () => {
+    if (!token) {
+      console.log('⚠️ No token available, skipping application status check')
+      return
+    }
     try {
+      console.log('🔍 Fetching application status for project:', id)
       const response = await fetch(`https://alumconnect-s4c7.onrender.com/api/projects/${id}/application-status`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       })
       if (response.ok) {
         const data = await response.json()
-        setHasApplied(data.has_applied)
-        setApplicationStatus(data.status || null)
+        console.log('✅ Application status response:', data)
+        
+        let applicationsData: Record<string, { application_id: number, status: string, applied_at: string, is_legacy?: boolean }> = {}
+        
+        // Handle new format with applications object
+        if (data.applications) {
+          applicationsData = data.applications
+          console.log('📋 Applications by position (new format):', data.applications)
+        }
+        // Handle old format - single application without positions
+        else if (data.has_applied && data.application_id) {
+          console.log('⚠️ Old format detected - converting to new format')
+          // If it's an old application, we need to get all positions and assign this application to all
+          if (project?.positions) {
+            project.positions.forEach(pos => {
+              applicationsData[pos.id.toString()] = {
+                application_id: data.application_id,
+                status: data.status,
+                applied_at: data.applied_at,
+                is_legacy: true
+              }
+            })
+          }
+          console.log('📋 Converted applications:', applicationsData)
+        }
+        
+        console.log('🔢 Number of applications:', Object.keys(applicationsData).length)
+        
+        // Log each position application for debugging
+        Object.entries(applicationsData).forEach(([posId, app]: [string, any]) => {
+          console.log(`  Position ${posId}:`, app)
+        })
+        
+        setPositionApplications(applicationsData)
+        console.log('💾 State updated with applications:', applicationsData)
+      } else {
+        console.error('❌ Failed to fetch application status:', response.status, await response.text())
       }
     } catch (error) {
-      console.error('Error checking application status:', error)
+      console.error('❌ Error checking application status:', error)
     }
   }
 
   const handleApply = async () => {
-    if (!user || !project) return
+    if (!user || !project || !selectedPosition || !token) {
+      console.error('❌ Missing required data:', { user: !!user, project: !!project, selectedPosition, token: !!token })
+      return
+    }
+
+    const requestBody = {
+      project_id: project.id,
+      position_id: selectedPosition,
+      message: applicationMessage
+    }
+    
+    console.log('📤 Submitting application:', requestBody)
 
     setIsApplying(true)
     try {
@@ -162,28 +231,40 @@ export const ProjectDetailPage: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          project_id: project.id,
-          position_id: selectedPosition,
-          message: applicationMessage
-        })
+        body: JSON.stringify(requestBody)
       })
 
+      console.log('📥 Response status:', response.status)
+
       if (response.ok) {
+        const data = await response.json()
+        console.log('✅ Application submitted successfully:', data)
+        
+        // Update the position applications state
+        setPositionApplications(prev => ({
+          ...prev,
+          [selectedPosition.toString()]: {
+            application_id: data.id || 0,
+            status: 'pending',
+            applied_at: new Date().toISOString()
+          }
+        }))
         setApplicationSubmitted(true)
-        setHasApplied(true)
-        setApplicationStatus('pending')
         setApplicationMessage('')
+        setIsApplyDialogOpen(false)
         setSelectedPosition(null)
+        // Refetch to get the actual application data from server
+        setTimeout(() => checkApplicationStatus(), 500)
       } else {
         const error = await response.json()
-        console.error('Failed to submit application:', error.error)
-        alert(error.error || 'Failed to submit application')
+        console.error('❌ Failed to submit application:', error)
+        alert(error.error || error.message || 'Failed to submit application')
       }
     } catch (error) {
-      console.error('Error submitting application:', error)
+      console.error('❌ Error submitting application:', error)
+      alert('Failed to submit application. Please try again.')
     } finally {
       setIsApplying(false)
     }
@@ -286,48 +367,38 @@ export const ProjectDetailPage: React.FC = () => {
             </div>
 
             {/* Quick Action Buttons */}
-            {user && user.role === 'student' && project.status === 'active' && !hasApplied && (
+            {user && user.role === 'student' && project.status === 'active' && (
               <div className="flex gap-3">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 font-semibold px-8 py-6 text-lg rounded-full shadow-lg">
-                      Apply Now
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Apply for {project.title}</DialogTitle>
-                      <DialogDescription>
-                        Write a message to introduce yourself and explain why you're interested in this project.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <Textarea
-                        placeholder="Tell us about yourself and why you want to work on this project..."
-                        value={applicationMessage}
-                        onChange={(e) => setApplicationMessage(e.target.value)}
-                        rows={4}
-                      />
-                      <Button 
-                        onClick={handleApply} 
-                        disabled={isApplying || !applicationMessage.trim()}
-                        className="w-full"
-                      >
-                        {isApplying ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Submitting...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="mr-2 h-4 w-4" />
-                            Submit Application
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                {project.positions && project.positions.filter(p => p.is_active && !positionApplications[p.id.toString()]).length > 0 && (
+                  <Button 
+                    size="lg" 
+                    className="bg-white text-blue-600 hover:bg-gray-100 font-semibold px-8 py-6 text-lg rounded-full shadow-lg"
+                    onClick={() => {
+                      // Scroll to positions section
+                      const positionsSection = document.querySelector('[data-section="positions"]')
+                      if (positionsSection) {
+                        positionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }
+                    }}
+                  >
+                    View Open Positions
+                  </Button>
+                )}
+                {Object.keys(positionApplications).length > 0 && (
+                  <Button 
+                    size="lg" 
+                    className="bg-white text-blue-600 hover:bg-gray-100 font-semibold px-8 py-6 text-lg rounded-full shadow-lg"
+                    onClick={() => {
+                      // Scroll to positions section to see application status
+                      const positionsSection = document.querySelector('[data-section="positions"]')
+                      if (positionsSection) {
+                        positionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }
+                    }}
+                  >
+                    View Your Applications
+                  </Button>
+                )}
                 <Button size="lg" variant="outline" className="bg-transparent border-2 border-white text-white hover:bg-white/10 font-semibold px-8 py-6 text-lg rounded-full">
                   <Heart className="h-5 w-5 mr-2" />
                   Save
@@ -600,7 +671,7 @@ export const ProjectDetailPage: React.FC = () => {
 
               {/* Open Positions */}
               {project.positions && project.positions.filter(p => p.is_active).length > 0 && (
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+                <div data-section="positions" className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
                   <div className="flex items-center space-x-4 mb-6">
                     <div className="h-12 w-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg">
                       <UserCheck className="h-6 w-6 text-white" />
@@ -717,14 +788,124 @@ export const ProjectDetailPage: React.FC = () => {
                           </div>
                         )}
                         
-                        {user && user.role === 'student' && position.is_active && !hasApplied && (
-                          <Button
-                            size="lg"
-                            className="mt-4 w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-6 rounded-xl shadow-lg"
-                            onClick={() => setSelectedPosition(position.id)}
-                          >
-                            Apply for this position →
-                          </Button>
+                        {user && user.role === 'student' && position.is_active && (
+                          <div className="mt-4">
+                            {positionApplications[position.id.toString()] ? (
+                              <div className={`p-5 rounded-xl border-2 ${
+                                positionApplications[position.id.toString()].status === 'accepted' 
+                                  ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300' 
+                                  : positionApplications[position.id.toString()].status === 'declined' 
+                                  ? 'bg-gradient-to-br from-red-50 to-pink-50 border-red-300' 
+                                  : 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300'
+                              }`}>
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center space-x-3">
+                                    {positionApplications[position.id.toString()].status === 'accepted' ? (
+                                      <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
+                                        <CheckCircle className="h-7 w-7 text-green-600" />
+                                      </div>
+                                    ) : positionApplications[position.id.toString()].status === 'declined' ? (
+                                      <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center">
+                                        <X className="h-7 w-7 text-red-600" />
+                                      </div>
+                                    ) : (
+                                      <div className="h-12 w-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                                        <Clock className="h-7 w-7 text-yellow-600" />
+                                      </div>
+                                    )}
+                                    <div>
+                                      <p className="font-bold text-gray-900 text-lg">
+                                        {positionApplications[position.id.toString()].status === 'accepted' 
+                                          ? 'Application Accepted!' 
+                                          : positionApplications[position.id.toString()].status === 'declined' 
+                                          ? 'Application Declined' 
+                                          : 'Application Pending'}
+                                      </p>
+                                      <p className="text-sm text-gray-600">
+                                        Applied on {new Date(positionApplications[position.id.toString()].applied_at).toLocaleDateString()}
+                                        {positionApplications[position.id.toString()].is_legacy && (
+                                          <span className="ml-2 text-xs text-blue-600">(General Application)</span>
+                                        )}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Badge 
+                                    className={`${
+                                      positionApplications[position.id.toString()].status === 'accepted' ? 'bg-green-600 text-white' : 
+                                      positionApplications[position.id.toString()].status === 'declined' ? 'bg-red-600 text-white' : 
+                                      'bg-yellow-600 text-white'
+                                    } border-0 font-bold px-4 py-2 text-sm`}
+                                  >
+                                    {positionApplications[position.id.toString()].status.toUpperCase()}
+                                  </Badge>
+                                </div>
+                                {positionApplications[position.id.toString()].status === 'pending' && (
+                                  <p className="text-sm text-gray-600 mt-2 pl-15">
+                                    Your application is under review. We'll notify you once a decision is made.
+                                  </p>
+                                )}
+                                {positionApplications[position.id.toString()].status === 'accepted' && (
+                                  <p className="text-sm text-green-700 mt-2 pl-15 font-medium">
+                                    Congratulations! The project creator will contact you soon.
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <Dialog open={isApplyDialogOpen && selectedPosition === position.id} onOpenChange={(open) => {
+                                setIsApplyDialogOpen(open)
+                                if (!open) {
+                                  setSelectedPosition(null)
+                                  setApplicationMessage('')
+                                }
+                              }}>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    size="lg"
+                                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-6 rounded-xl shadow-lg"
+                                    onClick={() => {
+                                      setSelectedPosition(position.id)
+                                      setIsApplyDialogOpen(true)
+                                    }}
+                                  >
+                                    Apply for this position →
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-md">
+                                  <DialogHeader>
+                                    <DialogTitle>Apply for {position.title}</DialogTitle>
+                                    <DialogDescription>
+                                      Write a message to introduce yourself and explain why you're interested in this position.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <Textarea
+                                      placeholder="Tell us about yourself and why you want this position..."
+                                      value={applicationMessage}
+                                      onChange={(e) => setApplicationMessage(e.target.value)}
+                                      rows={4}
+                                    />
+                                    <Button 
+                                      onClick={handleApply} 
+                                      disabled={isApplying || !applicationMessage.trim()}
+                                      className="w-full"
+                                    >
+                                      {isApplying ? (
+                                        <>
+                                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                          Submitting...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Send className="mr-2 h-4 w-4" />
+                                          Submit Application
+                                        </>
+                                      )}
+                                    </Button>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            )}
+                          </div>
                         )}
                       </div>
                     ))}
@@ -757,74 +938,76 @@ export const ProjectDetailPage: React.FC = () => {
               {user && user.role === 'student' && project.status === 'active' && (
                 <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl shadow-lg border border-blue-300 overflow-hidden">
                   <div className="p-6">
-                    {hasApplied || applicationSubmitted ? (
-                      <div className="text-center text-white">
-                        <div className="h-16 w-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
-                          <CheckCircle className="h-10 w-10 text-green-500" />
+                    {Object.keys(positionApplications).length > 0 ? (
+                      <div className="text-white">
+                        <div className="text-center mb-4">
+                          <div className="h-16 w-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                            <CheckCircle className="h-10 w-10 text-green-500" />
+                          </div>
+                          <h3 className="text-xl font-bold mb-2">Your Applications</h3>
+                          <p className="text-sm text-blue-100">
+                            You have applied to {Object.keys(positionApplications).length} position{Object.keys(positionApplications).length > 1 ? 's' : ''}
+                          </p>
                         </div>
-                        <h3 className="text-xl font-bold mb-2">Application Submitted!</h3>
-                        <p className="text-sm text-blue-100 mb-4">
-                          Your application has been sent to the project creator.
-                        </p>
-                        {applicationStatus && (
-                          <Badge 
-                            variant="secondary"
-                            className={`${
-                              applicationStatus === 'accepted' ? 'bg-green-100 text-green-700' : 
-                              applicationStatus === 'declined' ? 'bg-red-100 text-red-700' : 
-                              'bg-yellow-100 text-yellow-700'
-                            } border-0 font-bold px-4 py-2`}
+                        
+                        <div className="space-y-2 mt-4">
+                          {Object.entries(positionApplications).map(([posId, app]) => {
+                            const position = project.positions?.find(p => p.id.toString() === posId)
+                            return (
+                              <div key={posId} className="p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <p className="font-bold text-white text-sm">{position?.title || 'Position'}</p>
+                                    <p className="text-xs text-blue-100">Applied {new Date(app.applied_at).toLocaleDateString()}</p>
+                                  </div>
+                                  <Badge 
+                                    className={`${
+                                      app.status === 'accepted' ? 'bg-green-100 text-green-700' : 
+                                      app.status === 'declined' ? 'bg-red-100 text-red-700' : 
+                                      'bg-yellow-100 text-yellow-700'
+                                    } border-0 font-bold text-xs`}
+                                  >
+                                    {app.status.toUpperCase()}
+                                  </Badge>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                        
+                        {project.positions && project.positions.filter(p => p.is_active && !positionApplications[p.id.toString()]).length > 0 && (
+                          <Button 
+                            size="lg" 
+                            className="w-full mt-4 bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg py-6 rounded-xl shadow-lg"
+                            onClick={() => {
+                              const positionsSection = document.querySelector('[data-section="positions"]')
+                              if (positionsSection) {
+                                positionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                              }
+                            }}
                           >
-                            Status: {applicationStatus}
-                          </Badge>
+                            Apply to More Positions
+                          </Button>
                         )}
                       </div>
                     ) : (
                       <div className="text-center text-white">
                         <h3 className="text-xl font-bold mb-2">Interested?</h3>
                         <p className="text-sm text-blue-100 mb-6">
-                          Apply now and be part of something amazing!
+                          Apply for open positions and be part of something amazing!
                         </p>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button size="lg" className="w-full bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg py-6 rounded-xl shadow-lg">
-                              Apply Now
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>Apply for {project.title}</DialogTitle>
-                              <DialogDescription>
-                                Write a message to introduce yourself and explain why you're interested in this project.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <Textarea
-                                placeholder="Tell us about yourself and why you want to work on this project..."
-                                value={applicationMessage}
-                                onChange={(e) => setApplicationMessage(e.target.value)}
-                                rows={4}
-                              />
-                              <Button 
-                                onClick={handleApply} 
-                                disabled={isApplying || !applicationMessage.trim()}
-                                className="w-full"
-                              >
-                                {isApplying ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Submitting...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Send className="mr-2 h-4 w-4" />
-                                    Submit Application
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                        <Button 
+                          size="lg" 
+                          className="w-full bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg py-6 rounded-xl shadow-lg"
+                          onClick={() => {
+                            const positionsSection = document.querySelector('[data-section="positions"]')
+                            if (positionsSection) {
+                              positionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                            }
+                          }}
+                        >
+                          View Open Positions
+                        </Button>
                       </div>
                     )}
                   </div>

@@ -17,7 +17,7 @@ interface DashboardStats {
 
 interface RecentActivity {
   id: number
-  type: 'mentorship' | 'project_application'
+  type: 'mentorship' | 'project_application' | 'project'
   title: string
   description: string
   status: string
@@ -52,9 +52,10 @@ export const AlumniDashboard: React.FC = () => {
         }
 
         // Build recent activity from supported endpoints
-        const [mentorshipRes, applicationsRes] = await Promise.all([
+        const [mentorshipRes, applicationsRes, projectsRes] = await Promise.all([
           fetch('https://alumconnect-s4c7.onrender.com/api/mentorship/requests', { headers: { Authorization: `Bearer ${token}` } }),
-          fetch('https://alumconnect-s4c7.onrender.com/api/alumni/project-applications', { headers: { Authorization: `Bearer ${token}` } })
+          fetch('https://alumconnect-s4c7.onrender.com/api/alumni/project-applications', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('https://alumconnect-s4c7.onrender.com/api/alumni/projects', { headers: { Authorization: `Bearer ${token}` } })
         ])
 
         const activities: RecentActivity[] = []
@@ -84,6 +85,24 @@ export const AlumniDashboard: React.FC = () => {
               status: a.status || 'pending',
               created_at: a.created_at
             })
+          }
+        }
+
+
+        if (projectsRes.ok) {
+          const projectsData = await projectsRes.json()
+          // Add ongoing and completed projects
+          for (const p of projectsData) {
+            if (p.status === 'active' || p.status === 'completed') {
+              activities.push({
+                id: p.id,
+                type: 'project',
+                title: p.title,
+                description: p.description.length > 100 ? p.description.substring(0, 100) + '...' : p.description,
+                status: p.status,
+                created_at: p.created_at
+              })
+            }
           }
         }
 
@@ -290,16 +309,22 @@ export const AlumniDashboard: React.FC = () => {
               ) : recentActivity.length > 0 ? (
                 <div className="space-y-4">
                   {recentActivity.slice(0, 5).map((activity) => (
-                    <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200 group">
+                    <div key={`${activity.type}-${activity.id}`} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200 group">
                       <div className={`p-2 rounded-full ${
                         activity.type === 'mentorship' 
                           ? 'bg-purple-100 group-hover:bg-purple-200' 
+                          : activity.type === 'project'
+                          ? activity.status === 'completed' ? 'bg-green-100 group-hover:bg-green-200' : 'bg-blue-100 group-hover:bg-blue-200'
                           : 'bg-blue-100 group-hover:bg-blue-200'
                       } transition-colors duration-200`}>
                         {activity.type === 'mentorship' ? (
-                          <Users className={`h-4 w-4 ${
-                            activity.type === 'mentorship' ? 'text-purple-600' : 'text-blue-600'
-                          }`} />
+                          <Users className="h-4 w-4 text-purple-600" />
+                        ) : activity.type === 'project' ? (
+                          activity.status === 'completed' ? (
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <Briefcase className="h-4 w-4 text-blue-600" />
+                          )
                         ) : (
                           <Briefcase className="h-4 w-4 text-blue-600" />
                         )}
@@ -313,10 +338,17 @@ export const AlumniDashboard: React.FC = () => {
                         </p>
                         <div className="flex items-center space-x-2 mt-2">
                           <Badge 
-                            variant={activity.status === 'pending' ? 'secondary' : 'default'}
-                            className="text-xs"
+                            variant={
+                              activity.status === 'pending' ? 'secondary' : 
+                              activity.status === 'completed' ? 'default' :
+                              activity.status === 'active' ? 'default' : 'secondary'
+                            }
+                            className={`text-xs ${
+                              activity.status === 'completed' ? 'bg-green-500' :
+                              activity.status === 'active' ? 'bg-blue-500' : ''
+                            }`}
                           >
-                            {activity.status}
+                            {activity.status === 'active' ? 'ongoing' : activity.status}
                           </Badge>
                           <span className="text-xs text-gray-400">
                             {new Date(activity.created_at).toLocaleDateString()}

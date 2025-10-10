@@ -6,9 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Avatar, AvatarFallback } from '../components/ui/avatar'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog'
-import { Textarea } from '../components/ui/textarea'
-import { Briefcase, Clock, MapPin, DollarSign, ArrowRight, Loader2, Send, CheckCircle, BookOpen, Building, Heart, X } from 'lucide-react'
+import { Briefcase, Clock, MapPin, DollarSign, ArrowRight, Loader2, CheckCircle, BookOpen, Building, Heart, X } from 'lucide-react'
 import { ProfileModal } from '../components/ProfileModal'
 
 interface Project {
@@ -49,14 +47,8 @@ export const AlumniConnectPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([])
   const [blogs, setBlogs] = useState<BlogPost[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
-  const [applicationMessage, setApplicationMessage] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [applicationSubmitted, setApplicationSubmitted] = useState(false)
   const [profileModalUserId, setProfileModalUserId] = useState<number | null>(null)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
-
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [appliedProjects, setAppliedProjects] = useState<Set<number>>(new Set())
   const [applicationStatuses, setApplicationStatuses] = useState<Map<number, string>>(new Map())
 
@@ -87,11 +79,17 @@ export const AlumniConnectPage: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      // Fetch projects and blogs in parallel
-      const [projectsResponse, blogsResponse] = await Promise.all([
-        fetch('https://alumconnect-s4c7.onrender.com/api/projects'),
-        fetch('https://alumconnect-s4c7.onrender.com/api/blog')
-      ])
+      // Fetch recommended projects for students, all projects for others
+      let projectsResponse
+      if (user && user.role === 'student' && token) {
+        projectsResponse = await fetch('https://alumconnect-s4c7.onrender.com/api/projects/recommended', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      } else {
+        projectsResponse = await fetch('https://alumconnect-s4c7.onrender.com/api/projects')
+      }
+
+      const blogsResponse = await fetch('https://alumconnect-s4c7.onrender.com/api/blog')
 
       if (projectsResponse.ok) {
         const projectsData = await projectsResponse.json()
@@ -106,43 +104,6 @@ export const AlumniConnectPage: React.FC = () => {
       console.error('Error fetching data:', error)
     } finally {
       setIsLoading(false)
-    }
-  }
-  
-  const handleApply = async () => {
-    if (!user || !selectedProject) return
-    
-    setIsSubmitting(true)
-    try {
-      const response = await fetch('https://alumconnect-s4c7.onrender.com/api/project-applications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          project_id: selectedProject.id,
-          message: applicationMessage
-        })
-      })
-
-      if (response.ok) {
-        setApplicationSubmitted(true)
-        setAppliedProjects(prev => new Set(prev).add(selectedProject.id))
-        setApplicationMessage('')
-        setTimeout(() => {
-          setIsDialogOpen(false)
-          setApplicationSubmitted(false)
-        }, 2000)
-      } else {
-        const error = await response.json()
-        alert(error.error || 'Failed to submit application')
-      }
-    } catch (error) {
-      console.error('Error submitting application:', error)
-      alert('Failed to submit application')
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -219,7 +180,7 @@ export const AlumniConnectPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-8">
                     <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Available Projects</h2>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Recommended Projects</h2>
                   <p className="text-gray-600">Apply for projects and gain real-world experience</p>
                 </div>
                 <Button asChild variant="outline">
@@ -371,73 +332,15 @@ export const AlumniConnectPage: React.FC = () => {
                                     )}
                                   </div>
                                 ) : (
-                                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                                    <DialogTrigger asChild>
-                                      <Button 
-                                        size="sm"
-                                        onClick={() => setSelectedProject(project)}
-                                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-                                      >
-                                        Apply Now
-                                      </Button>
-                                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Apply for {selectedProject?.title || project.title}</DialogTitle>
-                        <DialogDescription>
-                          Write a message to introduce yourself and explain why you're interested in this project.
-                        </DialogDescription>
-                      </DialogHeader>
-                      {applicationSubmitted ? (
-                        <div className="text-center py-6">
-                          <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">Application Submitted!</h3>
-                          <p className="text-sm text-gray-600">
-                            Your application has been sent successfully.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          <Textarea
-                            placeholder="Tell us about yourself and why you want to work on this project..."
-                            value={applicationMessage}
-                            onChange={(e) => setApplicationMessage(e.target.value)}
-                            rows={4}
-                          />
-                          <div className="flex gap-3">
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setIsDialogOpen(false)
-                                setApplicationMessage('')
-                              }}
-                              className="flex-1"
-                              disabled={isSubmitting}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              onClick={handleApply} 
-                              disabled={isSubmitting || !applicationMessage.trim()}
-                              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                            >
-                              {isSubmitting ? (
-                                <>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Submitting...
-                                </>
-                              ) : (
-                                <>
-                                  <Send className="mr-2 h-4 w-4" />
-                                  Submit
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </DialogContent>
-                  </Dialog>
+                                  <Button 
+                                    size="sm"
+                                    asChild
+                                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                                  >
+                                    <Link to={`/projects/${project.id}`}>
+                                      Apply Now
+                                    </Link>
+                                  </Button>
                                 )
                               )}
                             </div>
