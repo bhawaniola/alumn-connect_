@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import { GooeyNav } from '../../components/ui/gooey-nav'
 import { Sheet, SheetContent, SheetTrigger } from '../../components/ui/sheet'
-import { Menu, GraduationCap, Users, BookOpen, MessageCircle, LogOut, User } from 'lucide-react'
+import { Menu, GraduationCap, Users, BookOpen, MessageCircle, LogOut, User, ChevronDown } from 'lucide-react'
 import logoImage from '../../images/name.png'
 
 export const Header: React.FC = () => {
@@ -144,16 +144,22 @@ export const Header: React.FC = () => {
               <div className="relative">
                 <Button 
                   variant="ghost" 
-                  className="relative h-8 w-8 rounded-full p-0"
+                  className="relative h-10 rounded-full px-3 hover:bg-gray-100"
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                 >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage 
-                      src={profileAvatar ? `https://alumconnect-s4c7.onrender.com/api/profile/picture/${profileAvatar}` : undefined} 
-                      alt={user.name} 
-                    />
-                    <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
+                  <div className="flex items-center space-x-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage 
+                        src={profileAvatar ? `https://alumconnect-s4c7.onrender.com/api/profile/picture/${profileAvatar}` : undefined} 
+                        alt={user.name} 
+                      />
+                      <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="hidden lg:inline-block text-sm font-medium text-gray-700">
+                      {user.name}
+                    </span>
+                    <ChevronDown className="hidden lg:block h-4 w-4 text-gray-500" />
+                  </div>
                 </Button>
                 
                 {isProfileMenuOpen && (
