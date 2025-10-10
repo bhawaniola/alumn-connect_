@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button'
 import { Textarea } from '../components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog'
 import { Avatar, AvatarFallback } from '../components/ui/avatar'
-import { Briefcase, Users, Loader2, Send, CheckCircle, ArrowLeft, MapPin, Clock, DollarSign, Code, Building, UserCheck, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Edit } from 'lucide-react'
+import { Briefcase, Users, Loader2, Send, CheckCircle, ArrowLeft, MapPin, Clock, DollarSign, Code, UserCheck, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Edit, Mail, Phone, Globe, Award, TrendingUp, Handshake, Star } from 'lucide-react'
 import { ProfileModal } from '../components/ProfileModal'
 
 interface Position {
@@ -17,6 +17,9 @@ interface Position {
   count: number
   filled_count: number
   is_active: boolean
+  stipend?: number
+  duration?: string
+  location?: string
   selected_students: Array<{
     id: number
     name: string
@@ -33,10 +36,6 @@ interface Project {
   team_members: string[]
   tags: string[]
   skills_required: string[]
-  stipend?: number
-  duration?: string
-  location?: string
-  work_type?: string
   created_at: string
   created_by_id: number
   created_by_name: string
@@ -45,6 +44,19 @@ interface Project {
   images?: string[]
   project_links?: { label: string, url: string }[]
   jd_pdf?: string
+  contact_details?: {
+    email?: string
+    phone?: string
+    website?: string
+  }
+  team_roles?: Array<{
+    name: string
+    role: string
+    skills?: string[]
+  }>
+  partners?: string[]
+  funding?: string
+  highlights?: string[]
 }
 
 export const ProjectDetailPage: React.FC = () => {
@@ -284,69 +296,20 @@ export const ProjectDetailPage: React.FC = () => {
                   </p>
 
                   {/* External Links & JD */}
-                  <div className="flex flex-wrap gap-3 mb-8">
-                    {project.jd_pdf && (
-                      <a href={project.jd_pdf} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50">
-                        <FileText className="h-4 w-4 mr-2" /> Job Description
-                      </a>
-                    )}
-                    {project.project_links && project.project_links.map((l, i) => (
-                      <a key={i} href={l.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50">
-                        <LinkIcon className="h-4 w-4 mr-2" /> {l.label || 'Link'}
-                      </a>
-                    ))}
-                  </div>
-
-                  {/* Project Details Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {project.stipend && (
-                      <div className="flex items-center space-x-3 p-4 rounded-xl bg-green-50 border border-green-100">
-                        <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
-                          <DollarSign className="h-5 w-5 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Stipend</p>
-                          <p className="text-lg font-bold text-green-600">₹{project.stipend.toLocaleString()}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {project.duration && (
-                      <div className="flex items-center space-x-3 p-4 rounded-xl bg-blue-50 border border-blue-100">
-                        <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Clock className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Duration</p>
-                          <p className="text-lg font-semibold text-blue-600">{project.duration}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {project.location && (
-                      <div className="flex items-center space-x-3 p-4 rounded-xl bg-purple-50 border border-purple-100">
-                        <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
-                          <MapPin className="h-5 w-5 text-purple-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Location</p>
-                          <p className="text-lg font-semibold text-purple-600">{project.location}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {project.work_type && (
-                      <div className="flex items-center space-x-3 p-4 rounded-xl bg-orange-50 border border-orange-100">
-                        <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center">
-                          <Building className="h-5 w-5 text-orange-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Work Type</p>
-                          <p className="text-lg font-semibold text-orange-600 capitalize">{project.work_type}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  {(project.jd_pdf || (project.project_links && project.project_links.length > 0)) && (
+                    <div className="flex flex-wrap gap-3 mb-6">
+                      {project.jd_pdf && (
+                        <a href={project.jd_pdf} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50">
+                          <FileText className="h-4 w-4 mr-2" /> Job Description
+                        </a>
+                      )}
+                      {project.project_links && project.project_links.map((l, i) => (
+                        <a key={i} href={l.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50">
+                          <LinkIcon className="h-4 w-4 mr-2" /> {l.label || 'Link'}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -375,8 +338,48 @@ export const ProjectDetailPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Team Members */}
-              {project.team_members && project.team_members.length > 0 && (
+              {/* Team Roles */}
+              {project.team_roles && project.team_roles.length > 0 && (
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="p-8">
+                    <div className="flex items-center space-x-3 mb-6">
+                      <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <Users className="h-5 w-5 text-green-600" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-gray-900">Team</h2>
+                    </div>
+                    <div className="space-y-4">
+                      {project.team_roles.map((member, index: number) => (
+                        <div key={index} className="p-4 rounded-xl border border-gray-200 hover:border-green-300 transition-all">
+                          <div className="flex items-start space-x-3">
+                            <Avatar className="h-12 w-12">
+                              <AvatarFallback className="bg-gradient-to-br from-pink-100 to-blue-100 text-gray-700">
+                                {member.name.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <p className="font-semibold text-gray-900">{member.name}</p>
+                              <p className="text-sm text-gray-600 mb-2">{member.role}</p>
+                              {member.skills && member.skills.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                  {member.skills.map((skill, idx) => (
+                                    <Badge key={idx} variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
+                                      {skill}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Team Members (Legacy) */}
+              {project.team_members && project.team_members.length > 0 && (!project.team_roles || project.team_roles.length === 0) && (
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                   <div className="p-8">
                     <div className="flex items-center space-x-3 mb-6">
@@ -397,6 +400,49 @@ export const ProjectDetailPage: React.FC = () => {
                             <p className="font-medium text-gray-900">{member}</p>
                             <p className="text-sm text-gray-500">Team Member</p>
                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Partners */}
+              {project.partners && project.partners.length > 0 && (
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="p-8">
+                    <div className="flex items-center space-x-3 mb-6">
+                      <div className="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <Handshake className="h-5 w-5 text-indigo-600" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-gray-900">Partners</h2>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {project.partners.map((partner: string, index: number) => (
+                        <div key={index} className="p-4 rounded-xl border border-gray-200 text-center hover:border-indigo-300 transition-all">
+                          <p className="font-semibold text-gray-900">{partner}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Highlights */}
+              {project.highlights && project.highlights.length > 0 && (
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="p-8">
+                    <div className="flex items-center space-x-3 mb-6">
+                      <div className="h-10 w-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <Star className="h-5 w-5 text-yellow-600" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-gray-900">Highlights</h2>
+                    </div>
+                    <div className="space-y-3">
+                      {project.highlights.map((highlight: string, index: number) => (
+                        <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-yellow-50 border border-yellow-100">
+                          <Award className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                          <p className="text-gray-900">{highlight}</p>
                         </div>
                       ))}
                     </div>
@@ -456,6 +502,37 @@ export const ProjectDetailPage: React.FC = () => {
                                 {position.filled_count}/{position.count} filled
                               </span>
                             </div>
+                          </div>
+                          
+                          {/* Position Details Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                            {position.stipend && (
+                              <div className="flex items-center space-x-2 p-2 rounded-lg bg-green-50 border border-green-100">
+                                <DollarSign className="h-4 w-4 text-green-600" />
+                                <div>
+                                  <p className="text-xs text-gray-600">Stipend</p>
+                                  <p className="text-sm font-semibold text-green-600">₹{position.stipend.toLocaleString()}</p>
+                                </div>
+                              </div>
+                            )}
+                            {position.duration && (
+                              <div className="flex items-center space-x-2 p-2 rounded-lg bg-blue-50 border border-blue-100">
+                                <Clock className="h-4 w-4 text-blue-600" />
+                                <div>
+                                  <p className="text-xs text-gray-600">Duration</p>
+                                  <p className="text-sm font-semibold text-blue-600">{position.duration}</p>
+                                </div>
+                              </div>
+                            )}
+                            {position.location && (
+                              <div className="flex items-center space-x-2 p-2 rounded-lg bg-purple-50 border border-purple-100">
+                                <MapPin className="h-4 w-4 text-purple-600" />
+                                <div>
+                                  <p className="text-xs text-gray-600">Location</p>
+                                  <p className="text-sm font-semibold text-purple-600">{position.location}</p>
+                                </div>
+                              </div>
+                            )}
                           </div>
                           
                           {position.required_skills && position.required_skills.length > 0 && (
@@ -546,6 +623,50 @@ export const ProjectDetailPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Contact Details */}
+              {project.contact_details && (project.contact_details.email || project.contact_details.phone || project.contact_details.website) && (
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Contact Information</h3>
+                    <div className="space-y-3">
+                      {project.contact_details.email && (
+                        <a href={`mailto:${project.contact_details.email}`} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <Mail className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-gray-500">Email</p>
+                            <p className="text-sm font-medium text-gray-900 truncate">{project.contact_details.email}</p>
+                          </div>
+                        </a>
+                      )}
+                      {project.contact_details.phone && (
+                        <a href={`tel:${project.contact_details.phone}`} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <Phone className="h-5 w-5 text-green-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-gray-500">Phone</p>
+                            <p className="text-sm font-medium text-gray-900">{project.contact_details.phone}</p>
+                          </div>
+                        </a>
+                      )}
+                      {project.contact_details.website && (
+                        <a href={project.contact_details.website} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
+                            <Globe className="h-5 w-5 text-purple-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-gray-500">Website</p>
+                            <p className="text-sm font-medium text-gray-900 truncate">{project.contact_details.website}</p>
+                          </div>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Application Section */}
               {user && user.role === 'student' && project.status === 'active' && (
@@ -638,6 +759,15 @@ export const ProjectDetailPage: React.FC = () => {
                       <span className="text-sm text-gray-600">Category</span>
                       <span className="text-sm font-medium text-gray-900">{project.category}</span>
                     </div>
+                    {project.funding && (
+                      <div className="pt-3 border-t border-gray-200">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <TrendingUp className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-gray-600">Funding</span>
+                        </div>
+                        <p className="text-sm font-semibold text-green-600">{project.funding}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

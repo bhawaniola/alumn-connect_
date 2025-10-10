@@ -14,6 +14,10 @@ interface PositionForm {
   description: string
   count: number
   is_active: boolean
+  stipend?: number
+  duration?: string
+  location?: string
+  required_skills?: string[]
 }
 
 interface ProjectForm {
@@ -21,14 +25,23 @@ interface ProjectForm {
   description: string
   category: string
   status: string
-  location?: string
-  work_type?: string
-  stipend?: number
-  duration?: string
   images?: string[]
   links?: { label: string, url: string }[]
   jd_url?: string
   positions: PositionForm[]
+  contact_details?: {
+    email?: string
+    phone?: string
+    website?: string
+  }
+  team_roles?: Array<{
+    name: string
+    role: string
+    skills?: string[]
+  }>
+  partners?: string[]
+  funding?: string
+  highlights?: string[]
 }
 
 export const EditProjectPage: React.FC = () => {
@@ -40,6 +53,9 @@ export const EditProjectPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [imagesText, setImagesText] = useState('')
   const [linksText, setLinksText] = useState('')
+  const [partnersText, setPartnersText] = useState('')
+  const [highlightsText, setHighlightsText] = useState('')
+  const [teamRolesText, setTeamRolesText] = useState('')
 
   useEffect(() => {
     const load = async () => {
@@ -53,18 +69,32 @@ export const EditProjectPage: React.FC = () => {
             description: p.description,
             category: p.category,
             status: p.status,
-            location: p.location,
-            work_type: p.work_type,
-            stipend: p.stipend,
-            duration: p.duration,
             images: p.images || [],
             links: p.project_links || [],
             jd_url: p.jd_pdf || '',
-            positions: (p.positions || []).map((pos: any) => ({ id: pos.id, title: pos.title, description: pos.description, count: pos.count, is_active: pos.is_active }))
+            positions: (p.positions || []).map((pos: any) => ({ 
+              id: pos.id, 
+              title: pos.title, 
+              description: pos.description, 
+              count: pos.count, 
+              is_active: pos.is_active,
+              stipend: pos.stipend,
+              duration: pos.duration,
+              location: pos.location,
+              required_skills: pos.required_skills || []
+            })),
+            contact_details: p.contact_details || {},
+            team_roles: p.team_roles || [],
+            partners: p.partners || [],
+            funding: p.funding || '',
+            highlights: p.highlights || []
           }
           setForm(loadedForm)
           setImagesText((loadedForm.images || []).join('\n'))
           setLinksText((loadedForm.links || []).map(l => `${l.label}|${l.url}`).join('\n'))
+          setPartnersText((loadedForm.partners || []).join('\n'))
+          setHighlightsText((loadedForm.highlights || []).join('\n'))
+          setTeamRolesText((loadedForm.team_roles || []).map(tr => `${tr.name}|${tr.role}|${(tr.skills || []).join(',')}`).join('\n'))
         }
       } catch (e) {
         console.error('Failed to load project', e)
@@ -102,7 +132,7 @@ export const EditProjectPage: React.FC = () => {
   }
 
   const addPosition = () => {
-    setForm({ ...form, positions: [...form.positions, { title: '', description: '', count: 1, is_active: true }] })
+    setForm({ ...form, positions: [...form.positions, { title: '', description: '', count: 1, is_active: true, required_skills: [] }] })
   }
 
   const removePosition = (idx: number) => {
@@ -185,22 +215,6 @@ export const EditProjectPage: React.FC = () => {
                   <Label>Status</Label>
                   <Input value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} />
                 </div>
-                <div className="space-y-2">
-                  <Label>Location</Label>
-                  <Input value={form.location || ''} onChange={(e) => setForm({ ...form, location: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Work Type</Label>
-                  <Input value={form.work_type || ''} onChange={(e) => setForm({ ...form, work_type: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Stipend</Label>
-                  <Input type="number" value={form.stipend || 0} onChange={(e) => setForm({ ...form, stipend: Number(e.target.value) })} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Duration</Label>
-                  <Input value={form.duration || ''} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
-                </div>
               </div>
 
               <div className="space-y-2">
@@ -260,6 +274,95 @@ export const EditProjectPage: React.FC = () => {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label>Contact Details</Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <Input 
+                      placeholder="Email" 
+                      value={form.contact_details?.email || ''} 
+                      onChange={(e) => setForm({ ...form, contact_details: { ...form.contact_details, email: e.target.value } })} 
+                    />
+                  </div>
+                  <div>
+                    <Input 
+                      placeholder="Phone" 
+                      value={form.contact_details?.phone || ''} 
+                      onChange={(e) => setForm({ ...form, contact_details: { ...form.contact_details, phone: e.target.value } })} 
+                    />
+                  </div>
+                  <div>
+                    <Input 
+                      placeholder="Website" 
+                      value={form.contact_details?.website || ''} 
+                      onChange={(e) => setForm({ ...form, contact_details: { ...form.contact_details, website: e.target.value } })} 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Team Roles (one per line: name|role|skills)</Label>
+                <Textarea
+                  rows={4}
+                  value={teamRolesText}
+                  onChange={(e) => {
+                    const text = e.target.value
+                    setTeamRolesText(text)
+                    const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+                    const parsed = lines.map(line => {
+                      const parts = line.split('|')
+                      return {
+                        name: parts[0]?.trim() || '',
+                        role: parts[1]?.trim() || '',
+                        skills: parts[2] ? parts[2].split(',').map(s => s.trim()).filter(Boolean) : []
+                      }
+                    }).filter(tr => tr.name && tr.role)
+                    setForm({ ...form, team_roles: parsed })
+                  }}
+                  placeholder={"John Doe|Advisor|AI,ML\nJane Smith|Design Lead|UI/UX,Figma"}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Partners (one per line)</Label>
+                <Textarea
+                  rows={3}
+                  value={partnersText}
+                  onChange={(e) => {
+                    const text = e.target.value
+                    setPartnersText(text)
+                    const partners = text.split('\n').map(p => p.trim()).filter(Boolean)
+                    setForm({ ...form, partners })
+                  }}
+                  placeholder={"Google\nMicrosoft\nAWS"}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Funding</Label>
+                <Input 
+                  value={form.funding || ''} 
+                  onChange={(e) => setForm({ ...form, funding: e.target.value })} 
+                  placeholder="e.g., Seed Round - $500K"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Highlights (one per line)</Label>
+                <Textarea
+                  rows={4}
+                  value={highlightsText}
+                  onChange={(e) => {
+                    const text = e.target.value
+                    setHighlightsText(text)
+                    const highlights = text.split('\n').map(h => h.trim()).filter(Boolean)
+                    setForm({ ...form, highlights })
+                  }}
+                  placeholder={"Featured in TechCrunch\n10,000+ users\nAward-winning design"}
+                />
+              </div>
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-base font-semibold">Open Positions</Label>
@@ -280,6 +383,28 @@ export const EditProjectPage: React.FC = () => {
                     <div className="space-y-1">
                       <Label>Description</Label>
                       <Textarea value={pos.description} onChange={(e) => updatePosition(idx, { description: e.target.value })} rows={3} />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="space-y-1">
+                        <Label>Stipend (₹)</Label>
+                        <Input type="number" value={pos.stipend || ''} onChange={(e) => updatePosition(idx, { stipend: Number(e.target.value) || undefined })} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Duration</Label>
+                        <Input value={pos.duration || ''} onChange={(e) => updatePosition(idx, { duration: e.target.value })} placeholder="e.g., 3 months" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Location</Label>
+                        <Input value={pos.location || ''} onChange={(e) => updatePosition(idx, { location: e.target.value })} placeholder="e.g., Remote" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Required Skills (comma-separated)</Label>
+                      <Input 
+                        value={(pos.required_skills || []).join(', ')} 
+                        onChange={(e) => updatePosition(idx, { required_skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} 
+                        placeholder="React, Node.js, MongoDB"
+                      />
                     </div>
                     <div className="flex items-center justify-between">
                       <label className="flex items-center gap-2 text-sm">

@@ -169,6 +169,20 @@ def init_db():
     except:
         pass
     
+    # Add new columns to project_positions table if they don't exist
+    try:
+        cursor.execute('ALTER TABLE project_positions ADD COLUMN stipend INTEGER')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE project_positions ADD COLUMN duration TEXT')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE project_positions ADD COLUMN location TEXT')
+    except:
+        pass
+    
     # Add new columns to projects table if they don't exist
     try:
         cursor.execute('ALTER TABLE projects ADD COLUMN stipend INTEGER')
@@ -204,6 +218,26 @@ def init_db():
         pass
     try:
         cursor.execute('ALTER TABLE projects ADD COLUMN jd_pdf TEXT')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE projects ADD COLUMN contact_details TEXT')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE projects ADD COLUMN team_roles TEXT')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE projects ADD COLUMN partners TEXT')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE projects ADD COLUMN funding TEXT')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE projects ADD COLUMN highlights TEXT')
     except:
         pass
     
@@ -518,7 +552,7 @@ def get_projects():
         cursor.execute('''
             SELECT p.id, p.title, p.description, p.category, p.status, p.team_members, p.tags, p.skills_required, 
                    p.stipend, p.duration, p.location, p.work_type, p.created_at, u.name as created_by_name, p.is_recruiting,
-                   p.images, p.project_links, p.jd_pdf, p.created_by
+                   p.images, p.project_links, p.jd_pdf, p.created_by, p.contact_details, p.team_roles, p.partners, p.funding, p.highlights
             FROM projects p
             LEFT JOIN users u ON p.created_by = u.id
             ORDER BY p.created_at DESC
@@ -561,6 +595,11 @@ def get_projects():
                 'project_links': json.loads(row[16]) if row[16] else [],
                 'jd_pdf': row[17],
                 'created_by_id': row[18],
+                'contact_details': json.loads(row[19]) if row[19] else {},
+                'team_roles': json.loads(row[20]) if row[20] else [],
+                'partners': json.loads(row[21]) if row[21] else [],
+                'funding': row[22],
+                'highlights': json.loads(row[23]) if row[23] else [],
                 'has_applied': has_applied
             })
         
@@ -609,13 +648,18 @@ def create_project():
         images = json.dumps(data.get('images', []))
         project_links = json.dumps(data.get('project_links', []))
         jd_pdf = data.get('jd_pdf')
+        contact_details = json.dumps(data.get('contact_details', {}))
+        team_roles = json.dumps(data.get('team_roles', []))
+        partners = json.dumps(data.get('partners', []))
+        funding = data.get('funding')
+        highlights = json.dumps(data.get('highlights', []))
 
         cursor.execute('''
-            INSERT INTO projects (title, description, category, status, team_members, tags, skills_required, stipend, duration, location, work_type, is_recruiting, images, project_links, jd_pdf, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO projects (title, description, category, status, team_members, tags, skills_required, stipend, duration, location, work_type, is_recruiting, images, project_links, jd_pdf, contact_details, team_roles, partners, funding, highlights, created_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''' , (
             data['title'], data['description'], data['category'], status, team_members, tags, skills_required,
-            data.get('stipend'), data.get('duration'), data.get('location'), data.get('work_type'), is_recruiting, images, project_links, jd_pdf, user_id
+            None, None, None, None, is_recruiting, images, project_links, jd_pdf, contact_details, team_roles, partners, funding, highlights, user_id
         ))
 
         project_id = cursor.lastrowid
@@ -625,8 +669,8 @@ def create_project():
         if positions:
             for position in positions:
                 cursor.execute('''
-                    INSERT INTO project_positions (project_id, title, description, required_skills, count, filled_count, is_active)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO project_positions (project_id, title, description, required_skills, count, filled_count, is_active, stipend, duration, location)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (
                     project_id,
                     position.get('title'),
@@ -634,7 +678,10 @@ def create_project():
                     json.dumps(position.get('required_skills', [])),
                     position.get('count', 1),
                     0,
-                    True
+                    True,
+                    position.get('stipend'),
+                    position.get('duration'),
+                    position.get('location')
                 ))
         
         conn.commit()
@@ -675,6 +722,10 @@ def update_project(project_id):
         skills_required = json.dumps(data.get('skills_required', [])) if 'skills_required' in data else None
         images = json.dumps(data.get('images', [])) if 'images' in data else None
         project_links = json.dumps(data.get('project_links', [])) if 'project_links' in data else None
+        contact_details = json.dumps(data.get('contact_details', {})) if 'contact_details' in data else None
+        team_roles = json.dumps(data.get('team_roles', [])) if 'team_roles' in data else None
+        partners = json.dumps(data.get('partners', [])) if 'partners' in data else None
+        highlights = json.dumps(data.get('highlights', [])) if 'highlights' in data else None
 
         # Build dynamic update query
         update_fields = []
@@ -701,18 +752,7 @@ def update_project(project_id):
         if skills_required is not None:
             update_fields.append('skills_required = ?')
             update_values.append(skills_required)
-        if 'stipend' in data:
-            update_fields.append('stipend = ?')
-            update_values.append(data.get('stipend'))
-        if 'duration' in data:
-            update_fields.append('duration = ?')
-            update_values.append(data.get('duration'))
-        if 'location' in data:
-            update_fields.append('location = ?')
-            update_values.append(data.get('location'))
-        if 'work_type' in data:
-            update_fields.append('work_type = ?')
-            update_values.append(data.get('work_type'))
+        # Note: stipend, duration, location, work_type are now only at position level
         if 'is_recruiting' in data:
             update_fields.append('is_recruiting = ?')
             update_values.append(data.get('is_recruiting'))
@@ -725,6 +765,21 @@ def update_project(project_id):
         if 'jd_pdf' in data:
             update_fields.append('jd_pdf = ?')
             update_values.append(data.get('jd_pdf'))
+        if contact_details is not None:
+            update_fields.append('contact_details = ?')
+            update_values.append(contact_details)
+        if team_roles is not None:
+            update_fields.append('team_roles = ?')
+            update_values.append(team_roles)
+        if partners is not None:
+            update_fields.append('partners = ?')
+            update_values.append(partners)
+        if 'funding' in data:
+            update_fields.append('funding = ?')
+            update_values.append(data.get('funding'))
+        if highlights is not None:
+            update_fields.append('highlights = ?')
+            update_values.append(highlights)
 
         if not update_fields and 'positions' not in data:
             return jsonify({'error': 'No fields to update'}), 400
@@ -772,6 +827,15 @@ def update_project(project_id):
                         if count is not None:
                             pos_fields.append('count = ?')
                             pos_values.append(count)
+                        if position.get('stipend') is not None:
+                            pos_fields.append('stipend = ?')
+                            pos_values.append(position.get('stipend'))
+                        if position.get('duration') is not None:
+                            pos_fields.append('duration = ?')
+                            pos_values.append(position.get('duration'))
+                        if position.get('location') is not None:
+                            pos_fields.append('location = ?')
+                            pos_values.append(position.get('location'))
                         pos_fields.append('is_active = ?')
                         pos_values.append(is_active)
                         if pos_fields:
@@ -780,8 +844,8 @@ def update_project(project_id):
                 else:
                     # Insert new position
                     cursor.execute('''
-                        INSERT INTO project_positions (project_id, title, description, required_skills, count, filled_count, is_active)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO project_positions (project_id, title, description, required_skills, count, filled_count, is_active, stipend, duration, location)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ''', (
                         project_id,
                         title,
@@ -789,7 +853,10 @@ def update_project(project_id):
                         required_skills_json,
                         count or 1,
                         0,
-                        is_active
+                        is_active,
+                        position.get('stipend'),
+                        position.get('duration'),
+                        position.get('location')
                     ))
 
         conn.commit()
@@ -1328,7 +1395,7 @@ def get_project_detail(project_id):
         cursor.execute('''
             SELECT p.id, p.title, p.description, p.category, p.status, p.team_members, p.tags, p.skills_required,
                    p.stipend, p.duration, p.location, p.work_type, p.created_at, u.id as created_by_id, u.name as created_by_name, u.email as created_by_email,
-                   p.is_recruiting, p.images, p.project_links, p.jd_pdf
+                   p.is_recruiting, p.images, p.project_links, p.jd_pdf, p.contact_details, p.team_roles, p.partners, p.funding, p.highlights
             FROM projects p
             LEFT JOIN users u ON p.created_by = u.id
             WHERE p.id = ?
@@ -1359,13 +1426,19 @@ def get_project_detail(project_id):
             'is_recruiting': bool(project_data[16]) if project_data[16] is not None else True,
             'images': json.loads(project_data[17]) if project_data[17] else [],
             'project_links': json.loads(project_data[18]) if project_data[18] else [],
-            'jd_pdf': project_data[19]
+            'jd_pdf': project_data[19],
+            'contact_details': json.loads(project_data[20]) if project_data[20] else {},
+            'team_roles': json.loads(project_data[21]) if project_data[21] else [],
+            'partners': json.loads(project_data[22]) if project_data[22] else [],
+            'funding': project_data[23],
+            'highlights': json.loads(project_data[24]) if project_data[24] else []
         }
         
         # Fetch positions for this project
         cursor.execute('''
             SELECT pp.id, pp.title, pp.description, pp.required_skills, pp.count, pp.filled_count, pp.is_active,
-                   u.id as selected_student_id, u.name as selected_student_name, u.email as selected_student_email
+                   u.id as selected_student_id, u.name as selected_student_name, u.email as selected_student_email,
+                   pp.stipend, pp.duration, pp.location
             FROM project_positions pp
             LEFT JOIN project_applications pa ON pp.id = pa.position_id AND pa.status = 'accepted'
             LEFT JOIN users u ON pa.student_id = u.id
@@ -1387,7 +1460,10 @@ def get_project_detail(project_id):
                     'count': pos_data[4],
                     'filled_count': pos_data[5],
                     'is_active': bool(pos_data[6]),
-                    'selected_students': []
+                    'selected_students': [],
+                    'stipend': pos_data[10],
+                    'duration': pos_data[11],
+                    'location': pos_data[12]
                 }
             
             # Add selected student if exists
