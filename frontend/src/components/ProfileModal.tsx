@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
-import { GraduationCap, Building, MapPin, Briefcase, Globe, Code, X, Phone, Home, Loader2 } from 'lucide-react'
+import { GraduationCap, Building, MapPin, Briefcase, Globe, Code, X, Phone, Home, Loader2, FileText, Download } from 'lucide-react'
 
 interface Skill {
   name: string
@@ -47,6 +47,7 @@ interface Profile {
   website?: string
   linkedin?: string
   github?: string
+  cv_pdf?: string
 }
 
 interface ProfileModalProps {
@@ -187,6 +188,42 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ userId, isOpen, onCl
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* CV/Resume Card */}
+                  {profile.cv_pdf && (
+                    <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-purple-50">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-blue-600" />
+                          Resume / CV
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-blue-200">
+                          <div className="flex items-center gap-3">
+                            <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <FileText className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900">CV Document</p>
+                              <p className="text-sm text-gray-500">PDF Format</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                              onClick={() => window.open(`https://alumconnect-s4c7.onrender.com/api/profile/cv/${profile.cv_pdf}`, '_blank')}
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
 
                 {/* Main Content Area */}

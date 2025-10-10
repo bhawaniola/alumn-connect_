@@ -153,6 +153,10 @@ def init_db():
     except:
         pass
     try:
+        cursor.execute('ALTER TABLE users ADD COLUMN cv_pdf TEXT')
+    except:
+        pass
+    try:
         cursor.execute('ALTER TABLE users ADD COLUMN joining_year INTEGER')
     except:
         pass
@@ -1084,7 +1088,7 @@ def get_profile():
             SELECT id, name, email, role, graduation_year, department, hall, branch, bio,
                    current_company, current_position, location, work_preference,
                    phone, website, linkedin, github, avatar, program, joining_year,
-                   institute, specialization, past_projects
+                   institute, specialization, past_projects, cv_pdf
             FROM users WHERE id = ?
         ''', (user_id,))
         user_data = cursor.fetchone()
@@ -1128,6 +1132,7 @@ def get_profile():
             'institute': user_data[20],
             'specialization': user_data[21],
             'past_projects': json.loads(user_data[22]) if user_data[22] else [],
+            'cv_pdf': user_data[23],
             'skills': [{'name': s[0], 'type': s[1], 'proficiency': s[2]} for s in skills_data],
             'achievements': [{'title': a[0], 'description': a[1], 'type': a[2], 'date_earned': a[3], 'issuer': a[4]} for a in achievements_data],
             'languages': [{'name': l[0], 'proficiency': l[1]} for l in languages_data]
@@ -1153,7 +1158,7 @@ def get_user_profile_by_id(user_id):
             SELECT id, name, email, role, graduation_year, department, hall, branch, bio,
                    current_company, current_position, location, work_preference,
                    phone, website, linkedin, github, avatar, program, joining_year,
-                   institute, specialization, past_projects
+                   institute, specialization, past_projects, cv_pdf
             FROM users WHERE id = ?
         ''', (user_id,))
         user_data = cursor.fetchone()
@@ -1197,6 +1202,7 @@ def get_user_profile_by_id(user_id):
             'institute': user_data[20],
             'specialization': user_data[21],
             'past_projects': json.loads(user_data[22]) if user_data[22] else [],
+            'cv_pdf': user_data[23],
             'skills': [{'name': s[0], 'type': s[1], 'proficiency': s[2]} for s in skills_data],
             'achievements': [{'title': a[0], 'description': a[1], 'type': a[2], 'date_earned': a[3], 'issuer': a[4]} for a in achievements_data],
             'languages': [{'name': l[0], 'proficiency': l[1]} for l in languages_data]
@@ -2665,6 +2671,97 @@ def get_profile_picture(filename):
         return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
     except Exception as e:
         return jsonify({'error': 'File not found'}), 404
+
+# Upload CV endpoint
+@app.route('/api/profile/cv', methods=['POST'])
+@jwt_required()
+def upload_cv():
+    user_id = get_user_id_from_jwt()
+    
+    if 'cv' not in request.files:
+        return jsonify({'error': 'No CV file provided'}), 400
+    
+    file = request.files['cv']
+    
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    
+    # Check if file is PDF
+    if not file.filename.lower().endswith('.pdf'):
+        return jsonify({'error': 'Only PDF files are allowed'}), 400
+    
+    try:
+        # Generate unique filename
+        filename = f"cv_{user_id}_{uuid.uuid4().hex}.pdf"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        
+        # Update user's CV in database
+        conn = sqlite3.connect('launchpad.db')
+        cursor = conn.cursor()
+        
+        # Get old CV filename to delete it
+        cursor.execute('SELECT cv_pdf FROM users WHERE id = ?', (user_id,))
+        result = cursor.fetchone()
+        old_cv = result[0] if result else None
+        
+        # Update with new CV
+        cursor.execute('UPDATE users SET cv_pdf = ? WHERE id = ?', (filename, user_id))
+        conn.commit()
+        conn.close()
+        
+        # Delete old CV file if it exists
+        if old_cv:
+            old_filepath = os.path.join(app.config['UPLOAD_FOLDER'], old_cv)
+            if os.path.exists(old_filepath):
+                os.remove(old_filepath)
+        
+        return jsonify({
+            'message': 'CV uploaded successfully',
+            'cv_url': f'/api/profile/cv/{filename}'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Serve CV files
+@app.route('/api/profile/cv/<filename>')
+def get_cv(filename):
+    try:
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    except Exception as e:
+        return jsonify({'error': 'File not found'}), 404
+
+# Delete CV endpoint
+@app.route('/api/profile/cv', methods=['DELETE'])
+@jwt_required()
+def delete_cv():
+    user_id = get_user_id_from_jwt()
+    
+    try:
+        conn = sqlite3.connect('launchpad.db')
+        cursor = conn.cursor()
+        
+        # Get CV filename
+        cursor.execute('SELECT cv_pdf FROM users WHERE id = ?', (user_id,))
+        result = cursor.fetchone()
+        cv_filename = result[0] if result else None
+        
+        if cv_filename:
+            # Delete file
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], cv_filename)
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            
+            # Update database
+            cursor.execute('UPDATE users SET cv_pdf = NULL WHERE id = ?', (user_id,))
+            conn.commit()
+        
+        conn.close()
+        return jsonify({'message': 'CV deleted successfully'}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     init_db()

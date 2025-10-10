@@ -9,7 +9,7 @@ import { Input } from '../components/ui/input'
 import { Textarea } from '../components/ui/textarea'
 import { Label } from '../components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
-import { GraduationCap, Building, MapPin, Briefcase, Award, Globe, Code, MessageCircle, Edit, Save, X, Plus, Trash2, Home, Calendar, Phone, Camera } from 'lucide-react'
+import { GraduationCap, Building, MapPin, Briefcase, Award, Globe, Code, MessageCircle, Edit, Save, X, Plus, Trash2, Home, Calendar, Phone, Camera, FileText, Upload, Download } from 'lucide-react'
 import { Loader2 } from 'lucide-react'
 
 interface Skill {
@@ -60,6 +60,7 @@ interface Profile {
   website?: string
   linkedin?: string
   github?: string
+  cv_pdf?: string
   // Student-specific fields
   program?: string
   joining_year?: number
@@ -76,6 +77,7 @@ export const ProfilePage: React.FC = () => {
   const [saving, setSaving] = useState(false)
   const [editForm, setEditForm] = useState<Profile | null>(null)
   const [uploadingPicture, setUploadingPicture] = useState(false)
+  const [uploadingCV, setUploadingCV] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -191,6 +193,79 @@ export const ProfilePage: React.FC = () => {
       console.error('Error uploading picture:', error)
     } finally {
       setUploadingPicture(false)
+    }
+  }
+
+  const handleCVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || !token) return
+
+    // Validate file type
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      alert('Please upload a PDF file')
+      return
+    }
+
+    setUploadingCV(true)
+    try {
+      const formData = new FormData()
+      formData.append('cv', file)
+
+      const res = await fetch('https://alumconnect-s4c7.onrender.com/api/profile/cv', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      })
+
+      if (res.ok) {
+        // Reload profile to get updated CV
+        const profileRes = await fetch('https://alumconnect-s4c7.onrender.com/api/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        if (profileRes.ok) {
+          const profileData = await profileRes.json()
+          setProfile(profileData)
+        }
+        alert('CV uploaded successfully!')
+      } else {
+        const error = await res.json()
+        alert(error.error || 'Failed to upload CV')
+      }
+    } catch (error) {
+      console.error('Error uploading CV:', error)
+      alert('Error uploading CV')
+    } finally {
+      setUploadingCV(false)
+    }
+  }
+
+  const handleDeleteCV = async () => {
+    if (!token || !confirm('Are you sure you want to delete your CV?')) return
+
+    try {
+      const res = await fetch('https://alumconnect-s4c7.onrender.com/api/profile/cv', {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      if (res.ok) {
+        // Reload profile
+        const profileRes = await fetch('https://alumconnect-s4c7.onrender.com/api/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        if (profileRes.ok) {
+          const profileData = await profileRes.json()
+          setProfile(profileData)
+        }
+        alert('CV deleted successfully!')
+      }
+    } catch (error) {
+      console.error('Error deleting CV:', error)
+      alert('Error deleting CV')
     }
   }
 
@@ -489,6 +564,90 @@ export const ProfilePage: React.FC = () => {
                 )}
             </CardContent>
           </Card>
+
+          {/* CV/Resume Card - Only for Students */}
+          {user?.role === 'student' && (
+            <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-purple-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  Resume / CV
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {currentProfile.cv_pdf ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border-2 border-blue-200">
+                      <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <FileText className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">CV Document</p>
+                          <p className="text-sm text-gray-500">PDF Format</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                          onClick={() => window.open(`https://alumconnect-s4c7.onrender.com/api/profile/cv/${currentProfile.cv_pdf}`, '_blank')}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="w-full"
+                      onClick={handleDeleteCV}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete CV
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center p-6 bg-white rounded-lg border-2 border-dashed border-blue-300">
+                    <FileText className="h-12 w-12 text-blue-400 mx-auto mb-3" />
+                    <p className="text-sm text-gray-600 mb-4">Upload your CV/Resume (PDF only)</p>
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onChange={handleCVUpload}
+                      className="hidden"
+                      id="cv-upload"
+                      disabled={uploadingCV}
+                    />
+                    <label htmlFor="cv-upload">
+                      <Button
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700"
+                        disabled={uploadingCV}
+                        asChild
+                      >
+                        <span>
+                          {uploadingCV ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="h-4 w-4 mr-2" />
+                              Upload CV
+                            </>
+                          )}
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
           </div>
 
           {/* Main Content Area */}
