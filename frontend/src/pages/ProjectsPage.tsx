@@ -230,13 +230,13 @@ export const ProjectsPage: React.FC = () => {
           )}
         </div>
 
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Projects List */}
+        <div className="space-y-4">
           {filteredProjects.map((project) => (
             <Card key={project.id} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
+                <div className="flex items-start justify-between gap-6">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-3 flex-wrap">
                       <Badge 
                         variant={project.status === 'active' ? 'default' : 'secondary'}
@@ -262,58 +262,61 @@ export const ProjectsPage: React.FC = () => {
                         </Badge>
                       )}
                     </div>
-                    <CardTitle className="text-xl mb-2 line-clamp-2">{project.title}</CardTitle>
-                    <CardDescription className="line-clamp-3 text-base">
+                    <CardTitle className="text-xl mb-2">{project.title}</CardTitle>
+                    <CardDescription className="text-base line-clamp-2">
                       {project.description}
                     </CardDescription>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link to={`/projects/${project.id}`} className="flex items-center gap-2">
+                        View Details
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                {/* Tags Section */}
-                {project.tags && project.tags.length > 0 && (
-                  <div className="mb-3">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">Tags</p>
-                    <div className="flex flex-wrap gap-1">
-                      {project.tags.slice(0, 3).map((tag: string) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                      {project.tags.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{project.tags.length - 3}
-                        </Badge>
-                      )}
+                <div className="flex gap-8">
+                  {/* Tags Section */}
+                  {project.tags && project.tags.length > 0 && (
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-gray-600 mb-2">Tags</p>
+                      <div className="flex flex-wrap gap-1">
+                        {project.tags.slice(0, 3).map((tag: string) => (
+                          <Badge key={tag} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {project.tags.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{project.tags.length - 3}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
-                
-                {/* Skills Section */}
-                {project.skills_required && project.skills_required.length > 0 && (
-                  <div className="mb-4">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">Required Skills</p>
-                    <div className="flex flex-wrap gap-1">
-                      {project.skills_required.slice(0, 4).map((skill: string) => (
-                        <Badge key={skill} variant="secondary" className="text-xs bg-green-50 text-green-700 border-green-200">
-                          {skill}
-                        </Badge>
-                      ))}
-                      {project.skills_required.length > 4 && (
-                        <Badge variant="secondary" className="text-xs bg-green-50 text-green-700 border-green-200">
-                          +{project.skills_required.length - 4}
-                        </Badge>
-                      )}
+                  )}
+                  
+                  {/* Skills Section */}
+                  {project.skills_required && project.skills_required.length > 0 && (
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-gray-600 mb-2">Required Skills</p>
+                      <div className="flex flex-wrap gap-1">
+                        {project.skills_required.slice(0, 4).map((skill: string) => (
+                          <Badge key={skill} variant="secondary" className="text-xs bg-green-50 text-green-700 border-green-200">
+                            {skill}
+                          </Badge>
+                        ))}
+                        {project.skills_required.length > 4 && (
+                          <Badge variant="secondary" className="text-xs bg-green-50 text-green-700 border-green-200">
+                            +{project.skills_required.length - 4}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
-
-                <Button variant="ghost" size="sm" className="w-full" asChild>
-                  <Link to={`/projects/${project.id}`}>
-                    View Details
-                    <ArrowRight className="ml-1 h-3 w-3" />
-                  </Link>
-                </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))}
