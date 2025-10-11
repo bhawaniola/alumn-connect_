@@ -589,7 +589,7 @@ export const ProjectDetailPage: React.FC = () => {
                                         <div className="flex items-start space-x-4">
                                           <Avatar className="h-14 w-14 ring-2 ring-gray-200">
                                             <AvatarFallback className={`bg-gradient-to-br ${colors.gradient} text-white text-lg font-bold`}>
-                                              {member.name.split(' ').map(n => n[0]).join('')}
+                                            {member?.name ? member.name.split(' ').map(n => n[0]).join('') : '?'}
                                             </AvatarFallback>
                                           </Avatar>
                                           <div className="flex-1">
@@ -634,7 +634,7 @@ export const ProjectDetailPage: React.FC = () => {
                       <div key={index} className="flex items-center space-x-4 p-4 rounded-xl hover:bg-gray-50 border border-gray-200 transition-all">
                         <Avatar className="h-12 w-12 ring-2 ring-blue-200">
                           <AvatarFallback className="bg-gradient-to-br from-pink-100 to-blue-100 text-gray-700 font-bold">
-                            {member.split(' ').map(n => n[0]).join('')}
+                          {typeof member === 'string' ? member.split(' ').map(n => n[0]).join('') : '?'}
                           </AvatarFallback>
                         </Avatar>
                         <div>
@@ -774,7 +774,7 @@ export const ProjectDetailPage: React.FC = () => {
                                 >
                                   <Avatar className="h-10 w-10 ring-2 ring-green-300">
                                     <AvatarFallback className="bg-gradient-to-br from-green-400 to-emerald-500 text-white font-bold">
-                                      {student.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                      {student?.name ? student.name.split(' ').map(n => n[0]).join('').toUpperCase() : '?'}
                                     </AvatarFallback>
                                   </Avatar>
                                   <div className="flex-1">
@@ -1027,7 +1027,7 @@ export const ProjectDetailPage: React.FC = () => {
                   >
                     <Avatar className="h-14 w-14 ring-2 ring-blue-200">
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-lg font-bold">
-                        {project.created_by_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        {project.created_by_name?.split(' ').map(n => n[0]).join('').toUpperCase() || '?'}
                       </AvatarFallback>
                     </Avatar>
                     <div>
