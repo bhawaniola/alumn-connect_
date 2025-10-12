@@ -6,13 +6,6 @@ import { Badge } from '../components/ui/badge'
 import { Avatar, AvatarFallback } from '../components/ui/avatar'
 import { StarsAnimation } from '../components/ui/stars-animation'
 import { parseJsonField } from '../lib/dataUtils'
-import project from '../icons/software copy.png'
-//import mentorship from '../icons/mentorship.png'
-//import knowledge from '../icons/light-bulb.png'
-//import Creative from '../icons/creative.png'
-import Mentors from '../icons/speaker.png'
-import Blog from '../icons/blog.png'
-import Dept from '../icons/school.png'
 import Carousel from "../components/ui/carousel";
 import carouselImage1 from "../images/carousel-1.webp";
 import carouselImage2 from "../images/carousel-2.webp";
@@ -129,13 +122,6 @@ export const LandingPage: React.FC = () => {
       setIsLoading(false)
     }
   }
-
-  const stats = [
-    { label: "Active Projects", value: "5+", icon: project },
-    { label: "Alumni Mentors", value: "3+", icon: Mentors },
-    { label: "Blog Posts", value: "4+", icon: Blog },
-    { label: "Departments", value: "3+", icon: Dept }
-  ]
 
   return (
     <div className="min-h-screen bg-white">
