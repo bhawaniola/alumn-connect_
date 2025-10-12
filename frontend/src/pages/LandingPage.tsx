@@ -22,12 +22,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { ProfileModal } from '../components/ProfileModal';
 import {
   ArrowRight,
-  Users,
   BookOpen,
   Briefcase,
-  Lightbulb,
-  Award,
-  Globe,
   Loader2
 } from 'lucide-react'
 

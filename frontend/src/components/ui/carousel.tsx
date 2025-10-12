@@ -1,11 +1,9 @@
 import type { ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'react-feather';
-import { Children, useState, useEffect } from 'react'; // Make sure useEffect is imported
+import { Children, useState} from 'react'; 
 
 type CarouselProps = {
   children: ReactNode;
-  autoSlide?: boolean;          // Prop to enable/disable auto-slide
-  autoSlideInterval?: number;   // Prop to control slide speed
 }
 
 export default function Carousel({ 
