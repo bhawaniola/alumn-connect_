@@ -28,7 +28,7 @@ export default function Carousel({
         style={{ transform: `translateX(-${curr * 100}%)` }}
       >
         {slides.map((slide, i) => (
-          <div key={i} className="min-w-full flex-shrink-0">
+          <div key={i} className="w-full min-w-full flex-shrink-0">
             {slide}
           </div>
         ))}
