@@ -127,56 +127,56 @@ export const LandingPage: React.FC = () => {
     <div className="min-h-screen bg-white">
 
       {/* --- Responsive Carousel Section --- */}
-<section className='w-full relative'>
-  <Carousel>
-    {carouselSlidesData.map((slide, i) => (
-      <div 
-        key={i} 
-        // We'll use 85% of the viewport height on mobile to hint that there's more content below,
-        // and full-screen height on medium screens and up.
-        className="relative h-[85vh] md:h-screen w-full flex items-center justify-center overflow-hidden"
-      >
-        {/* Layer 1: Background Image */}
-        <img
-          src={slide.image}
-          alt={slide.title}
-          className="absolute inset-0 w-full h-full object-cover brightness-[0.4]"
-        />
+      <section className='w-full relative'>
+        <Carousel>
+          {carouselSlidesData.map((slide, i) => (
+            <div
+              key={i}
+              // We'll use 85% of the viewport height on mobile to hint that there's more content below,
+              // and full-screen height on medium screens and up.
+              className="relative h-[85vh] md:h-screen w-full flex items-center justify-center overflow-hidden"
+            >
+              {/* Layer 1: Background Image */}
+              <img
+                src={slide.image}
+                alt={slide.title}
+                className="absolute inset-0 w-full h-full object-cover brightness-[0.4]"
+              />
 
-        {/* Layer 2: Stars Animation */}
-        <div className="absolute inset-0 z-0">
-          <StarsAnimation starCount={100} speed={0.5} />
-        </div>
+              {/* Layer 2: Stars Animation */}
+              <div className="absolute inset-0 z-0">
+                <StarsAnimation starCount={100} speed={0.5} />
+              </div>
 
-        {/* Layer 3: Text Content */}
-        <div className="relative z-10 text-center text-white p-4 max-w-4xl mx-auto">
-          <h1 className={
-            // On mobile (base): text-4xl. On small screens (sm): text-5xl. On medium screens (md): text-7xl.
-            `text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight drop-shadow-md 
+              {/* Layer 3: Text Content */}
+              <div className="relative z-10 text-center text-white p-4 max-w-4xl mx-auto">
+                <h1 className={
+                  // On mobile (base): text-4xl. On small screens (sm): text-5xl. On medium screens (md): text-7xl.
+                  `text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight drop-shadow-md 
             bg-gradient-to-r ${slide.baseGradient} bg-clip-text text-transparent`
-          }>
-            {slide.title}{' '}
-            <span className={`bg-gradient-to-r ${slide.gradientColors} bg-clip-text text-transparent`}>
-              {slide.gradientText}
-            </span>
-          </h1>
-          <p className="mt-4 text-lg md:text-xl leading-relaxed opacity-90 drop-shadow-md">
-            {/* On mobile (base): text-lg. On medium screens (md): text-xl. */}
-            {slide.description}
-          </p>
-        </div>
+                }>
+                  {slide.title}{' '}
+                  <span className={`bg-gradient-to-r ${slide.gradientColors} bg-clip-text text-transparent`}>
+                    {slide.gradientText}
+                  </span>
+                </h1>
+                <p className="mt-4 text-lg md:text-xl leading-relaxed opacity-90 drop-shadow-md">
+                  {/* On mobile (base): text-lg. On medium screens (md): text-xl. */}
+                  {slide.description}
+                </p>
+              </div>
 
-        {/* ADDED: Mobile-only scroll down indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 md:hidden">
-          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-white rounded-full mt-2 animate-pulse"></div>
-          </div>
-        </div>
+              {/* ADDED: Mobile-only scroll down indicator */}
+              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 md:hidden">
+                <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
+                  <div className="w-1 h-3 bg-white rounded-full mt-2 animate-pulse"></div>
+                </div>
+              </div>
 
-      </div>
-    ))}
-  </Carousel>
-</section>
+            </div>
+          ))}
+        </Carousel>
+      </section>
 
 
 
@@ -371,7 +371,13 @@ export const LandingPage: React.FC = () => {
                       variant="ghost"
                       size="sm"
                       className="w-full"
-                      onClick={() => setViewingAlumniId(alumni.id)} // Change from Link to Button with onClick
+                      onClick={() => {
+                        if (token) {
+                          setViewingAlumniId(alumni.id);
+                        } else {
+                          alert('You have to log in to connect.');
+                        }
+                      }} // Change from Link to Button with onClick
                     >
                       Connect
                       <ArrowRight className="ml-1 h-3 w-3" />

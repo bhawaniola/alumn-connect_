@@ -61,24 +61,35 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ userId, isOpen, onCl
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const fetchProfile = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`https://alumconnect-s4c7.onrender.com/api/users/${userId}/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setProfile(data)
+      }
+      else {
+        // THIS IS THE MISSING FIX: Handle HTTP errors (like 401, 404, 500)
+        alert(`Error: The server responded with status ${res.status}. Please try again.`);
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error)
+      // Show an alert for network errors (backend down)
+      alert('Error: Could not connect to the server. Please try again later.');
+      // Close the modal since it can't load anything
+      onClose();
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
     if (isOpen && userId) {
-      const fetchProfile = async () => {
-        setLoading(true)
-        try {
-          const res = await fetch(`https://alumconnect-s4c7.onrender.com/api/users/${userId}/profile`, {
-            headers: { Authorization: `Bearer ${token}` }
-          })
-          if (res.ok) {
-            const data = await res.json()
-            setProfile(data)
-          }
-        } catch (error) {
-          console.error('Error fetching profile:', error)
-        } finally {
-          setLoading(false)
-        }
-      }
+
       fetchProfile()
     }
   }, [userId, isOpen, token])
@@ -87,7 +98,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ userId, isOpen, onCl
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div 
+      <div
         className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
@@ -109,12 +120,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ userId, isOpen, onCl
                 </Button>
                 <div className="flex flex-col md:flex-row items-center gap-6">
                   <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
-                    <AvatarImage 
-                      src={profile.avatar ? `https://alumconnect-s4c7.onrender.com/api/profile/picture/${profile.avatar}` : undefined} 
-                      alt={profile.name} 
+                    <AvatarImage
+                      src={profile.avatar ? `https://alumconnect-s4c7.onrender.com/api/profile/picture/${profile.avatar}` : undefined}
+                      alt={profile.name}
                     />
                     <AvatarFallback className="text-2xl bg-white text-blue-600">
-                      {profile.name.split(' ').map(n => n[0]).join('').slice(0,2)}
+                      {profile.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-center md:text-left">
@@ -324,10 +335,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ userId, isOpen, onCl
                         <div className="flex flex-wrap gap-3">
                           {profile.skills.map((skill, i) => (
                             <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-full bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200">
-                              <div className={`w-2 h-2 rounded-full ${
-                                skill.type === 'technical' ? 'bg-blue-500' : 
-                                skill.type === 'soft' ? 'bg-green-500' : 'bg-purple-500'
-                              }`}></div>
+                              <div className={`w-2 h-2 rounded-full ${skill.type === 'technical' ? 'bg-blue-500' :
+                                  skill.type === 'soft' ? 'bg-green-500' : 'bg-purple-500'
+                                }`}></div>
                               <span className="text-sm font-medium">{skill.name}</span>
                               <Badge variant="outline" className="text-xs">
                                 {skill.proficiency}
