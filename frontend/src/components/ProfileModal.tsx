@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
@@ -73,13 +74,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ userId, isOpen, onCl
       }
       else {
         // THIS IS THE MISSING FIX: Handle HTTP errors (like 401, 404, 500)
-        alert(`Error: The server responded with status ${res.status}. Please try again.`);
+        toast.error(`Error: The server responded with status ${res.status}. Please try again.`);
         onClose();
       }
     } catch (error) {
       console.error('Error fetching profile:', error)
       // Show an alert for network errors (backend down)
-      alert('Error: Could not connect to the server. Please try again later.');
+      toast.error('Error: Could not connect to the server. Please try again later.');
       // Close the modal since it can't load anything
       onClose();
     } finally {

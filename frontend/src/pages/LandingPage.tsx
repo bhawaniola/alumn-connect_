@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import toast from 'react-hot-toast';
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
@@ -53,7 +54,7 @@ const carouselSlidesData = [
     image: carouselImage1,
     title: "Forge Your",
     gradientText: "Vision",
-    description: "Collaborate on groundbreaking projects and transform ideas into reality with brilliant minds.",
+    description: "Collaborate on groundbreaking projects and transform ideas into reality with brilliant minds. Get helping in team building.",
     gradientColors: "from-blue-400 to-cyan-300 animate-pulse",
     baseGradient: "from-gray-700 to-blue-900"
   },
@@ -61,7 +62,7 @@ const carouselSlidesData = [
     image: carouselImage2,
     title: "Connect &",
     gradientText: "Grow",
-    description: "Expand your horizons by connecting with a vibrant network of alumni, industry leaders, and mentors.",
+    description: "Expand your horizons by connecting with a vibrant network of alumni, industry leaders, fund raisers, domain experts and mentors.",
     gradientColors: "from-amber-400 to-orange-500 animate-pulse",
     baseGradient: "from-gray-700 to-red-900"
   },
@@ -69,7 +70,7 @@ const carouselSlidesData = [
     image: carouselImage3,
     title: "Fuel Your",
     gradientText: "Ambition",
-    description: "Secure the resources and guidance needed to launch and scale your venture to new heights.",
+    description: "Secure the fund & resources and guidance needed to launch and scale your venture to new heights.",
     gradientColors: "from-purple-400 to-pink-500 animate-pulse",
     baseGradient: "from-gray-700 to-pink-900"
   },
@@ -375,7 +376,7 @@ export const LandingPage: React.FC = () => {
                         if (token) {
                           setViewingAlumniId(alumni.id);
                         } else {
-                          alert('You have to log in to connect.');
+                          toast.error('You have to log in to connect');
                         }
                       }} // Change from Link to Button with onClick
                     >
