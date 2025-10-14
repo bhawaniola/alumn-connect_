@@ -279,6 +279,14 @@ def init_db():
             FOREIGN KEY (author_id) REFERENCES users (id)
         )
     ''')
+    try:
+        cursor.execute('ALTER TABLE blog_posts ADD COLUMN images TEXT')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE blog_posts ADD COLUMN pdfs TEXT')
+    except:
+        pass
     
     # Conversations table
     cursor.execute('''
@@ -846,9 +854,10 @@ def create_project():
         tags = json.dumps(data.get('tags', []))
         skills_required = json.dumps(data.get('skills_required', []))
         is_recruiting = data.get('is_recruiting', True)
-        images = json.dumps(data.get('images', []))
+        # Enforce uploads-only for images/JD: initialize empty values here
+        images = json.dumps([])
         project_links = json.dumps(data.get('project_links', []))
-        jd_pdf = data.get('jd_pdf')
+        jd_pdf = None
         contact_details = json.dumps(data.get('contact_details', {}))
         team_roles = json.dumps(data.get('team_roles', []))
         partners = json.dumps(data.get('partners', []))
@@ -957,15 +966,11 @@ def update_project(project_id):
         if 'is_recruiting' in data:
             update_fields.append('is_recruiting = ?')
             update_values.append(data.get('is_recruiting'))
-        if images is not None:
-            update_fields.append('images = ?')
-            update_values.append(images)
+        # Do not allow direct setting of images via update; use upload endpoint
         if project_links is not None:
             update_fields.append('project_links = ?')
             update_values.append(project_links)
-        if 'jd_pdf' in data:
-            update_fields.append('jd_pdf = ?')
-            update_values.append(data.get('jd_pdf'))
+        # Do not allow direct setting of jd_pdf; use upload endpoint
         if contact_details is not None:
             update_fields.append('contact_details = ?')
             update_values.append(contact_details)
@@ -1076,7 +1081,7 @@ def get_blog_posts():
     try:
         cursor.execute('''
             SELECT b.id, b.title, b.content, b.category, b.created_at, b.updated_at,
-                   u.name as author_name, b.author_id
+                   b.images, b.pdfs, u.name as author_name, b.author_id
             FROM blog_posts b
             LEFT JOIN users u ON b.author_id = u.id
             ORDER BY b.created_at DESC
@@ -1097,8 +1102,10 @@ def get_blog_posts():
                 'category': row[3],
                 'created_at': row[4],
                 'updated_at': row[5],
-                'author_name': row[6],
-                'author_id': row[7],
+                'images': json.loads(row[6]) if row[6] else [],
+                'pdfs': json.loads(row[7]) if row[7] else [],
+                'author_name': row[8],
+                'author_id': row[9],
                 'likes_count': likes_count,
                 'is_liked': False  # Will be updated if user is logged in
             })
@@ -1139,10 +1146,13 @@ def create_blog_post():
             if not data.get(field):
                 return jsonify({'error': f'{field} is required'}), 400
 
+        # Enforce uploads-only for blogs: start with empty arrays
+        images_json = json.dumps([])
+        pdfs_json = json.dumps([])
         cursor.execute('''
-            INSERT INTO blog_posts (title, content, category, author_id)
-            VALUES (?, ?, ?, ?)
-        ''', (data['title'], data['content'], data.get('category'), user_id))
+            INSERT INTO blog_posts (title, content, category, author_id, images, pdfs)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (data['title'], data['content'], data.get('category'), user_id, images_json, pdfs_json))
 
         conn.commit()
         post_id = cursor.lastrowid
@@ -1161,7 +1171,7 @@ def get_blog_post(post_id):
     try:
         cursor.execute('''
             SELECT b.id, b.title, b.content, b.category, b.created_at, b.updated_at,
-                   u.name as author_name, b.author_id
+                   b.images, b.pdfs, u.name as author_name, b.author_id
             FROM blog_posts b
             LEFT JOIN users u ON b.author_id = u.id
             WHERE b.id = ?
@@ -1187,8 +1197,10 @@ def get_blog_post(post_id):
             'category': post_data[3],
             'created_at': post_data[4],
             'updated_at': post_data[5],
-            'author_name': post_data[6],
-            'author_id': post_data[7],
+            'images': json.loads(post_data[6]) if post_data[6] else [],
+            'pdfs': json.loads(post_data[7]) if post_data[7] else [],
+            'author_name': post_data[8],
+            'author_id': post_data[9],
             'likes_count': likes_count,
             'is_liked': is_liked
         }
@@ -1229,6 +1241,7 @@ def update_blog_post(post_id):
         if 'category' in data:
             fields.append('category = ?')
             values.append(data['category'])
+        # Do not allow direct setting of images/pdfs via update; use upload endpoints
         if not fields:
             return jsonify({'error': 'No fields to update'}), 400
         fields.append('updated_at = CURRENT_TIMESTAMP')
@@ -2607,7 +2620,7 @@ def get_alumni_blog_posts():
         
         # Get alumni's blog posts
         cursor.execute('''
-            SELECT id, title, content, category, created_at, updated_at
+            SELECT id, title, content, category, created_at, updated_at, images, pdfs
             FROM blog_posts
             WHERE author_id = ?
             ORDER BY created_at DESC
@@ -2621,7 +2634,9 @@ def get_alumni_blog_posts():
                 'content': row[2],
                 'category': row[3],
                 'created_at': row[4],
-                'updated_at': row[5]
+                'updated_at': row[5],
+                'images': json.loads(row[6]) if row[6] else [],
+                'pdfs': json.loads(row[7]) if row[7] else []
             })
         
         return jsonify(posts), 200
@@ -3055,6 +3070,97 @@ def get_profile_picture(filename):
     except Exception as e:
         return jsonify({'error': 'File not found'}), 404
 
+# Upload a blog image (append to images array)
+@app.route('/api/blog/<int:post_id>/images', methods=['POST'])
+@jwt_required()
+def upload_blog_image(post_id):
+    user_id = get_user_id_from_jwt()
+    try:
+        conn = sqlite3.connect('launchpad.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT author_id, images FROM blog_posts WHERE id = ?', (post_id,))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({'error': 'Blog post not found'}), 404
+        author_id, current_images = row[0], row[1]
+        if author_id != user_id:
+            return jsonify({'error': 'Only the author can upload images'}), 403
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        filename = secure_filename(file.filename)
+        ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+        if ext not in ['jpg', 'jpeg', 'png', 'gif']:
+            return jsonify({'error': 'Invalid file type. Only JPG, PNG, and GIF are allowed.'}), 400
+        unique_filename = f"img_{uuid.uuid4().hex}.{ext}"
+        folder = os.path.join(app.config['UPLOAD_FOLDER'], 'blogs', str(post_id), 'images')
+        os.makedirs(folder, exist_ok=True)
+        filepath = os.path.join(folder, unique_filename)
+        file.save(filepath)
+        images = json.loads(current_images) if current_images else []
+        file_url = f"/api/blog/{post_id}/images/{unique_filename}"
+        images.append(file_url)
+        cursor.execute('UPDATE blog_posts SET images = ? WHERE id = ?', (json.dumps(images), post_id))
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Image uploaded', 'url': file_url, 'images': images}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Serve blog images
+@app.route('/api/blog/<int:post_id>/images/<filename>')
+def get_blog_image(post_id, filename):
+    try:
+        return send_from_directory(os.path.join(app.config['UPLOAD_FOLDER'], 'blogs', str(post_id), 'images'), filename)
+    except Exception:
+        return jsonify({'error': 'File not found'}), 404
+
+# Upload a blog PDF (append to pdfs array)
+@app.route('/api/blog/<int:post_id>/pdfs', methods=['POST'])
+@jwt_required()
+def upload_blog_pdf(post_id):
+    user_id = get_user_id_from_jwt()
+    try:
+        conn = sqlite3.connect('launchpad.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT author_id, pdfs FROM blog_posts WHERE id = ?', (post_id,))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({'error': 'Blog post not found'}), 404
+        author_id, current_pdfs = row[0], row[1]
+        if author_id != user_id:
+            return jsonify({'error': 'Only the author can upload PDFs'}), 403
+        if 'pdf' not in request.files:
+            return jsonify({'error': 'No PDF file provided'}), 400
+        file = request.files['pdf']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        if not file.filename.lower().endswith('.pdf'):
+            return jsonify({'error': 'Only PDF files are allowed'}), 400
+        unique_filename = f"pdf_{uuid.uuid4().hex}.pdf"
+        folder = os.path.join(app.config['UPLOAD_FOLDER'], 'blogs', str(post_id), 'pdfs')
+        os.makedirs(folder, exist_ok=True)
+        filepath = os.path.join(folder, unique_filename)
+        file.save(filepath)
+        pdfs = json.loads(current_pdfs) if current_pdfs else []
+        file_url = f"/api/blog/{post_id}/pdfs/{unique_filename}"
+        pdfs.append(file_url)
+        cursor.execute('UPDATE blog_posts SET pdfs = ? WHERE id = ?', (json.dumps(pdfs), post_id))
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'PDF uploaded', 'url': file_url, 'pdfs': pdfs}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Serve blog PDFs
+@app.route('/api/blog/<int:post_id>/pdfs/<filename>')
+def get_blog_pdf(post_id, filename):
+    try:
+        return send_from_directory(os.path.join(app.config['UPLOAD_FOLDER'], 'blogs', str(post_id), 'pdfs'), filename)
+    except Exception:
+        return jsonify({'error': 'File not found'}), 404
 # Upload CV endpoint
 @app.route('/api/profile/cv', methods=['POST'])
 @jwt_required()
@@ -3145,6 +3251,128 @@ def delete_cv():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# Upload a project image (append to images array)
+@app.route('/api/projects/<int:project_id>/images', methods=['POST'])
+@jwt_required()
+def upload_project_image(project_id):
+    user_id = get_user_id_from_jwt()
+    
+    try:
+        conn = sqlite3.connect('launchpad.db')
+        cursor = conn.cursor()
+        
+        # Check if user is project creator
+        cursor.execute('SELECT created_by FROM projects WHERE id = ?', (project_id,))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({'error': 'Project not found'}), 404
+        creator_id = row[0]
+        
+        if creator_id != user_id:
+            return jsonify({'error': 'Only project creator can upload images'}), 403
+        
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        file = request.files['image']
+        
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        # Validate extension
+        filename = secure_filename(file.filename)
+        ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+        if ext not in ['jpg', 'jpeg', 'png', 'gif']:
+            return jsonify({'error': 'Invalid file type. Only JPG, PNG, and GIF are allowed.'}), 400
+
+        # Save to per-project images folder
+        unique_filename = f"img_{uuid.uuid4().hex}.{ext}"
+        folder = os.path.join(app.config['UPLOAD_FOLDER'], 'projects', str(project_id), 'images')
+        os.makedirs(folder, exist_ok=True)
+        filepath = os.path.join(folder, unique_filename)
+        file.save(filepath)
+
+        # Append to images array
+        cursor.execute('SELECT images FROM projects WHERE id = ?', (project_id,))
+        current = cursor.fetchone()[0]
+        images = json.loads(current) if current else []
+        file_url = f"/api/projects/{project_id}/images/{unique_filename}"
+        images.append(file_url)
+        cursor.execute('UPDATE projects SET images = ? WHERE id = ?', (json.dumps(images), project_id))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'message': 'Image uploaded', 'url': file_url, 'images': images}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Serve project images
+@app.route('/api/projects/<int:project_id>/images/<filename>')
+def get_project_image(project_id, filename):
+    try:
+        return send_from_directory(os.path.join(app.config['UPLOAD_FOLDER'], 'projects', str(project_id), 'images'), filename)
+    except Exception as e:
+        return jsonify({'error': 'File not found'}), 404
+
+# Upload project JD PDF (set/replace)
+@app.route('/api/projects/<int:project_id>/jd', methods=['POST'])
+@jwt_required()
+def upload_project_jd(project_id):
+    user_id = get_user_id_from_jwt()
+    
+    try:
+        conn = sqlite3.connect('launchpad.db')
+        cursor = conn.cursor()
+        
+        # Check if user is project creator
+        cursor.execute('SELECT created_by, jd_pdf FROM projects WHERE id = ?', (project_id,))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({'error': 'Project not found'}), 404
+        creator_id, existing_jd = row[0], row[1]
+        
+        if creator_id != user_id:
+            return jsonify({'error': 'Only project creator can upload JD'}), 403
+        
+        if 'jd_pdf' not in request.files:
+            return jsonify({'error': 'No JD file provided'}), 400
+        
+        file = request.files['jd_pdf']
+        
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        # Validate PDF
+        if not file.filename.lower().endswith('.pdf'):
+            return jsonify({'error': 'Only PDF files are allowed'}), 400
+
+        # Save to per-project jd folder
+        unique_filename = f"jd_{uuid.uuid4().hex}.pdf"
+        folder = os.path.join(app.config['UPLOAD_FOLDER'], 'projects', str(project_id), 'jd')
+        os.makedirs(folder, exist_ok=True)
+        filepath = os.path.join(folder, unique_filename)
+        file.save(filepath)
+
+        # Update jd_pdf URL
+        jd_url = f"/api/projects/{project_id}/jd/{unique_filename}"
+        cursor.execute('UPDATE projects SET jd_pdf = ? WHERE id = ?', (jd_url, project_id))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'message': 'JD uploaded', 'jd_pdf': jd_url}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Serve project JD files
+@app.route('/api/projects/<int:project_id>/jd/<filename>')
+def get_project_jd(project_id, filename):
+    try:
+        return send_from_directory(os.path.join(app.config['UPLOAD_FOLDER'], 'projects', str(project_id), 'jd'), filename)
+    except Exception as e:
+        return jsonify({'error': 'File not found'}), 404
 
 if __name__ == '__main__':
     init_db()

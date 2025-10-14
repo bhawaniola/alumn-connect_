@@ -30,6 +30,8 @@ export const CreateProjectPage: React.FC = () => {
     project_links: '',
     jd_pdf: ''
   })
+  const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [jdFile, setJdFile] = useState<File | null>(null)
   const [positions, setPositions] = useState<Array<{
     title: string
     description: string
@@ -91,6 +93,30 @@ export const CreateProjectPage: React.FC = () => {
         body: JSON.stringify(requestData)
       })
       if (res.ok) {
+        const created = await res.json()
+        const projectId = created.id
+        // Upload selected images (if any)
+        if (imageFiles.length > 0) {
+          for (const f of imageFiles) {
+            const fd = new FormData()
+            fd.append('image', f)
+            await fetch(`https://alumconnect-s4c7.onrender.com/api/projects/${projectId}/images`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}` },
+              body: fd
+            })
+          }
+        }
+        // Upload JD PDF (if provided)
+        if (jdFile) {
+          const fd = new FormData()
+          fd.append('jd_pdf', jdFile)
+          await fetch(`https://alumconnect-s4c7.onrender.com/api/projects/${projectId}/jd`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: fd
+          })
+        }
         navigate('/founders-dashboard')
       } else {
         const data = await res.json()
@@ -254,12 +280,13 @@ export const CreateProjectPage: React.FC = () => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="images">Project Images (comma-separated URLs)</Label>
+                <Label>Project Images (upload one or more)</Label>
                 <Input 
-                  id="images" 
-                  value={form.images} 
-                  onChange={handleChange} 
-                  placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg" 
+                  id="images_upload"
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/gif"
+                  multiple
+                  onChange={(e) => setImageFiles(Array.from(e.target.files || []))}
                 />
               </div>
               <div>
@@ -272,12 +299,12 @@ export const CreateProjectPage: React.FC = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="jd_pdf">Job Description PDF URL</Label>
+                <Label>Job Description PDF (upload)</Label>
                 <Input 
-                  id="jd_pdf" 
-                  value={form.jd_pdf} 
-                  onChange={handleChange} 
-                  placeholder="https://example.com/jd.pdf" 
+                  id="jd_pdf_upload" 
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(e) => setJdFile((e.target.files && e.target.files[0]) || null)}
                 />
               </div>
               

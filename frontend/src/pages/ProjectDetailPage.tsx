@@ -78,6 +78,14 @@ export const ProjectDetailPage: React.FC = () => {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
   const [isTeamExpanded, setIsTeamExpanded] = useState(false)
 
+  const API_BASE = 'https://alumconnect-s4c7.onrender.com'
+  const abs = (url?: string) => {
+    if (!url) return ''
+    if (url.startsWith('http://') || url.startsWith('https://')) return url
+    if (url.startsWith('/')) return `${API_BASE}${url}`
+    return url
+  }
+
   useEffect(() => {
     if (id) {
       fetchProject()
@@ -419,7 +427,7 @@ export const ProjectDetailPage: React.FC = () => {
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                   <div className="relative">
                     <img 
-                      src={project.images[carouselIndex]} 
+                      src={abs(project.images[carouselIndex])} 
                       alt={`Project image ${carouselIndex + 1}`} 
                       className="w-full h-96 object-cover"
                     />
@@ -469,7 +477,7 @@ export const ProjectDetailPage: React.FC = () => {
                     <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Resources</h3>
                     <div className="flex flex-wrap gap-3">
                       {project.jd_pdf && (
-                        <a href={project.jd_pdf} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-4 py-3 rounded-xl border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium transition-all">
+                        <a href={abs(project.jd_pdf)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-4 py-3 rounded-xl border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium transition-all">
                           <FileText className="h-5 w-5 mr-2" /> Job Description
                         </a>
                       )}

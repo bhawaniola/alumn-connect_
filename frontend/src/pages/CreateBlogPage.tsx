@@ -17,6 +17,8 @@ export const CreateBlogPage: React.FC = () => {
     category: 'General',
     content: ''
   })
+  const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [pdfFiles, setPdfFiles] = useState<File[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -54,6 +56,28 @@ export const CreateBlogPage: React.FC = () => {
         body: JSON.stringify(requestData)
       })
       if (res.ok) {
+        const created = await res.json()
+        const postId = created.id
+        // Upload images
+        for (const f of imageFiles) {
+          const fd = new FormData()
+          fd.append('image', f)
+          await fetch(`https://alumconnect-s4c7.onrender.com/api/blog/${postId}/images`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: fd
+          })
+        }
+        // Upload PDFs
+        for (const f of pdfFiles) {
+          const fd = new FormData()
+          fd.append('pdf', f)
+          await fetch(`https://alumconnect-s4c7.onrender.com/api/blog/${postId}/pdfs`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: fd
+          })
+        }
         navigate('/founders-dashboard')
       } else {
         const data = await res.json()
@@ -139,6 +163,16 @@ export const CreateBlogPage: React.FC = () => {
                 <p className="text-sm text-gray-500">Tip: Use the toolbar to format text and insert images/links</p>
               </div>
               
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">Images (upload one or more)</Label>
+                <Input type="file" accept="image/png,image/jpeg,image/jpg,image/gif" multiple onChange={(e) => setImageFiles(Array.from(e.target.files || []))} />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">PDFs (upload one or more)</Label>
+                <Input type="file" accept="application/pdf" multiple onChange={(e) => setPdfFiles(Array.from(e.target.files || []))} />
+              </div>
+
               <Button 
                 type="submit" 
                 disabled={loading} 

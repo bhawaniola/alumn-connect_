@@ -20,6 +20,8 @@ interface BlogPost {
   author_id: number
   likes_count?: number
   is_liked?: boolean
+  images?: string[]
+  pdfs?: string[]
 }
 
 export const BlogPostPage: React.FC = () => {
@@ -33,6 +35,14 @@ export const BlogPostPage: React.FC = () => {
   const [profileModalUserId, setProfileModalUserId] = useState<number | null>(null)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
+  const API_BASE = 'https://alumconnect-s4c7.onrender.com'
+  const abs = (url?: string) => {
+    if (!url) return ''
+    if (url.startsWith('http://') || url.startsWith('https://')) return url
+    if (url.startsWith('/')) return `${API_BASE}${url}`
+    return url
+  }
 
   useEffect(() => {
     if (id) {
@@ -294,6 +304,32 @@ export const BlogPostPage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Images Gallery */}
+          {post.images && post.images.length > 0 && (
+            <div className="mt-10 bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Images</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {post.images.map((img, i) => (
+                  <img key={i} src={abs(img)} alt={`Blog image ${i + 1}`} className="w-full h-56 object-cover rounded-xl border" />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* PDFs */}
+          {post.pdfs && post.pdfs.length > 0 && (
+            <div className="mt-8 bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Resources</h3>
+              <ul className="list-disc pl-6 space-y-2">
+                {post.pdfs.map((p, i) => (
+                  <li key={i}>
+                    <a href={abs(p)} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">Document {i + 1}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Author Section */}
           <div className="mt-16">

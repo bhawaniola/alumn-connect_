@@ -51,11 +51,57 @@ export const EditProjectPage: React.FC = () => {
   const [form, setForm] = useState<ProjectForm | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [imagesText, setImagesText] = useState('')
+  // images are upload-only now
   const [linksText, setLinksText] = useState('')
   const [partnersText, setPartnersText] = useState('')
   const [highlightsText, setHighlightsText] = useState('')
   const [teamRolesText, setTeamRolesText] = useState('')
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [uploadingJD, setUploadingJD] = useState(false)
+
+  const uploadImage = async (file: File) => {
+    if (!id || !token) return
+    setUploadingImage(true)
+    try {
+      const fd = new FormData()
+      fd.append('image', file)
+      const res = await fetch(`https://alumconnect-s4c7.onrender.com/api/projects/${id}/images`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setForm(prev => prev ? { ...prev, images: data.images } : prev)
+      } else {
+        console.error('Image upload failed', await res.text())
+      }
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
+  const uploadJD = async (file: File) => {
+    if (!id || !token) return
+    setUploadingJD(true)
+    try {
+      const fd = new FormData()
+      fd.append('jd_pdf', file)
+      const res = await fetch(`https://alumconnect-s4c7.onrender.com/api/projects/${id}/jd`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setForm(prev => prev ? { ...prev, jd_url: data.jd_pdf } : prev)
+      } else {
+        console.error('JD upload failed', await res.text())
+      }
+    } finally {
+      setUploadingJD(false)
+    }
+  }
 
   useEffect(() => {
     const load = async () => {
@@ -90,7 +136,6 @@ export const EditProjectPage: React.FC = () => {
             highlights: p.highlights || []
           }
           setForm(loadedForm)
-          setImagesText((loadedForm.images || []).join('\n'))
           setLinksText((loadedForm.links || []).map(l => `${l.label}|${l.url}`).join('\n'))
           setPartnersText((loadedForm.partners || []).join('\n'))
           setHighlightsText((loadedForm.highlights || []).join('\n'))
@@ -218,27 +263,31 @@ export const EditProjectPage: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Job Description URL (PDF)</Label>
-                <Input value={form.jd_url || ''} onChange={(e) => setForm({ ...form, jd_url: e.target.value })} placeholder="https://...pdf" />
+                <Label>Job Description (PDF)</Label>
+                <div className="flex flex-col gap-2">
+                  <Input value={form.jd_url || ''} readOnly placeholder="No JD uploaded yet" />
+                  <Input type="file" accept="application/pdf" onChange={(e) => e.target.files && e.target.files[0] && uploadJD(e.target.files[0])} />
+                  {uploadingJD && <p className="text-sm text-muted-foreground">Uploading JD...</p>}
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Images (one per line or comma-separated)</Label>
-                <Textarea
-                  rows={3}
-                  value={imagesText}
-                  onChange={(e) => {
-                    const text = e.target.value
-                    setImagesText(text)
-                    const tokens = text
-                      .split(/[\n,]+/)
-                      .flatMap(part => part.split(/\s+/))
-                      .map(s => s.trim())
-                      .filter(Boolean)
-                    setForm({ ...form, images: tokens })
-                  }}
-                  placeholder={"https://img1.jpg\nhttps://img2.png"}
-                />
+                <Label>Images</Label>
+                <div className="space-y-2">
+                  {(form.images || []).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No images yet</p>
+                  ) : (
+                    <ul className="list-disc pl-5 text-sm">
+                      {(form.images || []).map((url, idx) => (
+                        <li key={idx} className="truncate"><a className="text-blue-600 hover:underline" href={url} target="_blank" rel="noreferrer">{url}</a></li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Input type="file" accept="image/png,image/jpeg,image/jpg,image/gif" onChange={(e) => e.target.files && e.target.files[0] && uploadImage(e.target.files[0])} />
+                    {uploadingImage && <span className="text-sm text-muted-foreground">Uploading image...</span>}
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">

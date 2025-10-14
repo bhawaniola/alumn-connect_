@@ -15,6 +15,8 @@ interface BlogPost {
   content: string
   category: string
   author_id: number
+  images?: string[]
+  pdfs?: string[]
 }
 
 export const EditBlogPage: React.FC = () => {
@@ -24,6 +26,8 @@ export const EditBlogPage: React.FC = () => {
   const [post, setPost] = useState<BlogPost | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [uploadingPdf, setUploadingPdf] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -32,7 +36,7 @@ export const EditBlogPage: React.FC = () => {
         const res = await fetch(`https://alumconnect-s4c7.onrender.com/api/blog/${id}`)
         if (res.ok) {
           const data = await res.json()
-          setPost({ id: data.id, title: data.title, content: data.content, category: data.category, author_id: data.author_id })
+          setPost({ id: data.id, title: data.title, content: data.content, category: data.category, author_id: data.author_id, images: data.images || [], pdfs: data.pdfs || [] })
         }
       } catch (e) {
         console.error('Failed to load blog', e)
@@ -84,7 +88,11 @@ export const EditBlogPage: React.FC = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ title: post.title, category: post.category, content: post.content })
+        body: JSON.stringify({ 
+          title: post.title, 
+          category: post.category, 
+          content: post.content
+        })
       })
       if (res.ok) {
         navigate(`/blog/${post.id}`)
@@ -160,6 +168,72 @@ export const EditBlogPage: React.FC = () => {
                   value={post.content}
                   onChange={(html) => setPost({ ...post, content: html })}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">Images</Label>
+                {(post.images || []).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No images yet</p>
+                ) : (
+                  <ul className="list-disc pl-5 text-sm">
+                    {(post.images || []).map((url, i) => (
+                      <li key={i} className="truncate"><a className="text-blue-600 hover:underline" href={url} target="_blank" rel="noreferrer">{url}</a></li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex items-center gap-2">
+                  <Input type="file" accept="image/png,image/jpeg,image/jpg,image/gif" onChange={async (e) => {
+                    if (!e.target.files || !e.target.files[0] || !id || !token) return
+                    setUploadingImage(true)
+                    try {
+                      const fd = new FormData()
+                      fd.append('image', e.target.files[0])
+                      const res = await fetch(`https://alumconnect-s4c7.onrender.com/api/blog/${id}/images`, {
+                        method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd
+                      })
+                      if (res.ok) {
+                        const data = await res.json()
+                        setPost(prev => prev ? { ...prev, images: data.images } : prev)
+                      }
+                    } finally {
+                      setUploadingImage(false)
+                    }
+                  }} />
+                  {uploadingImage && <span className="text-sm text-muted-foreground">Uploading image...</span>}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">PDFs</Label>
+                {(post.pdfs || []).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No PDFs yet</p>
+                ) : (
+                  <ul className="list-disc pl-5 text-sm">
+                    {(post.pdfs || []).map((url, i) => (
+                      <li key={i} className="truncate"><a className="text-blue-600 hover:underline" href={url} target="_blank" rel="noreferrer">{url}</a></li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex items-center gap-2">
+                  <Input type="file" accept="application/pdf" onChange={async (e) => {
+                    if (!e.target.files || !e.target.files[0] || !id || !token) return
+                    setUploadingPdf(true)
+                    try {
+                      const fd = new FormData()
+                      fd.append('pdf', e.target.files[0])
+                      const res = await fetch(`https://alumconnect-s4c7.onrender.com/api/blog/${id}/pdfs`, {
+                        method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd
+                      })
+                      if (res.ok) {
+                        const data = await res.json()
+                        setPost(prev => prev ? { ...prev, pdfs: data.pdfs } : prev)
+                      }
+                    } finally {
+                      setUploadingPdf(false)
+                    }
+                  }} />
+                  {uploadingPdf && <span className="text-sm text-muted-foreground">Uploading PDF...</span>}
+                </div>
               </div>
 
               <div className="flex gap-2">
