@@ -1538,6 +1538,7 @@ def update_profile():
                 bio = COALESCE(?, bio),
                 hall = COALESCE(?, hall),
                 branch = COALESCE(?, branch),
+                graduation_year = COALESCE(?, graduation_year),
                 current_company = COALESCE(?, current_company),
                 current_position = COALESCE(?, current_position),
                 location = COALESCE(?, location),
@@ -1554,7 +1555,7 @@ def update_profile():
                 past_projects = COALESCE(?, past_projects)
             WHERE id = ?
         ''', (
-            data.get('name'), data.get('bio'), data.get('hall'), data.get('branch'),
+            data.get('name'), data.get('bio'), data.get('hall'), data.get('branch'), data.get('graduation_year'),
             data.get('current_company'), data.get('current_position'), data.get('location'),
             data.get('work_preference'), data.get('phone'), data.get('website'),
             data.get('linkedin'), data.get('github'), data.get('avatar'),

@@ -784,19 +784,21 @@ export const ProfilePage: React.FC = () => {
                         className="bg-white/50"
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="branch">Branch</Label>
-                      <Input
-                        id="branch"
-                        value={currentProfile.branch || ''}
-                        onChange={(e) => setEditForm({...currentProfile, branch: e.target.value})}
-                        placeholder="Branch/Stream"
-                        className="bg-white/50"
-                      />
-                    </div>
+                    {/* Branch removed from student profile */}
                     {/* Student-specific fields */}
                     {currentProfile.role === 'student' && (
                       <>
+                        <div>
+                          <Label htmlFor="graduation_year">Year of Graduation</Label>
+                          <Input
+                            id="graduation_year"
+                            type="number"
+                            value={currentProfile.graduation_year || ''}
+                            onChange={(e) => setEditForm({...currentProfile, graduation_year: parseInt(e.target.value)})}
+                            placeholder="e.g., 2026"
+                            className="bg-white/50"
+                          />
+                        </div>
                         <div>
                           <Label htmlFor="program">Program *</Label>
                           <Select
@@ -926,14 +928,14 @@ export const ProfilePage: React.FC = () => {
                         </div>
                       </div>
                     )}
-                    {currentProfile.branch && (
+                    {currentProfile.graduation_year && (
                       <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50">
                         <div className="p-2 rounded-full bg-green-100">
-                          <Code className="h-4 w-4 text-green-600" />
+                          <Calendar className="h-4 w-4 text-green-600" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium">Branch</p>
-                          <p className="text-sm text-muted-foreground">{currentProfile.branch}</p>
+                          <p className="text-sm font-medium">Graduation Year</p>
+                          <p className="text-sm text-muted-foreground">{currentProfile.graduation_year}</p>
                         </div>
                       </div>
                     )}

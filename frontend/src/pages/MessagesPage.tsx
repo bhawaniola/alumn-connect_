@@ -310,13 +310,11 @@ export const MessagesPage: React.FC = () => {
       u.current_company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.current_position?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.hall?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.branch?.toLowerCase().includes(searchTerm.toLowerCase())
+      u.hall?.toLowerCase().includes(searchTerm.toLowerCase())
     
     // Department filter
     const departmentMatch = selectedDepartment === 'all' || 
-      u.department === selectedDepartment ||
-      u.branch === selectedDepartment
+      u.department === selectedDepartment
     
     // Graduation year filter
     const yearMatch = selectedGraduationYear === 'all' || 
@@ -328,7 +326,7 @@ export const MessagesPage: React.FC = () => {
   // Get unique departments and graduation years for filter options
   const departments = Array.from(new Set(
     availableUsers
-      .map(u => u.department || u.branch)
+      .map(u => u.department)
       .filter(Boolean)
   )).sort()
 
@@ -463,7 +461,7 @@ export const MessagesPage: React.FC = () => {
                         ) : (
                           <>
                             <p className="text-xs md:text-sm text-gray-500 truncate">
-                              {userObj.branch || userObj.department || 'Student'}
+                              {userObj.department || 'Student'}
                             </p>
                             {!!userObj.graduation_year && (
                               <p className="text-xs md:text-sm text-gray-500 truncate">Class of {userObj.graduation_year}</p>

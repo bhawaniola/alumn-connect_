@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
-import { GraduationCap, Building, MapPin, Briefcase, Globe, Code, X, Phone, Home, Loader2, FileText, Download, ArrowRight, CheckCircle } from 'lucide-react'
+import { GraduationCap, Building, MapPin, Briefcase, Globe, Code, X, Phone, Home, Loader2, FileText, Download, ArrowRight, CheckCircle, Calendar } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 interface Skill {
@@ -371,14 +371,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ userId, isOpen, onCl
                           </div>
                         </div>
                       )}
-                      {profile.branch && (
+                      {profile.graduation_year && (
                         <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50">
                           <div className="p-2 rounded-full bg-green-100">
-                            <Code className="h-4 w-4 text-green-600" />
+                            <Calendar className="h-4 w-4 text-green-600" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium">Branch</p>
-                            <p className="text-sm text-muted-foreground">{profile.branch}</p>
+                            <p className="text-sm font-medium">Graduation Year</p>
+                            <p className="text-sm text-muted-foreground">{profile.graduation_year}</p>
                           </div>
                         </div>
                       )}
