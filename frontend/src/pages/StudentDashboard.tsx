@@ -18,6 +18,7 @@ interface ProjectItem {
   created_by_name: string
   application_status: string
   applied_at: string
+  is_completed?: boolean
 }
 
 interface MentorshipRequest {
@@ -133,6 +134,10 @@ export const StudentDashboard: React.FC = () => {
     )
   }
 
+  const ongoingProjects = appliedProjects.filter(
+    (p) => p.application_status === 'accepted' && p.status === 'active' && !p.is_completed
+  )
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 py-12">
       <div className="container mx-auto px-4 max-w-7xl">
@@ -237,6 +242,48 @@ export const StudentDashboard: React.FC = () => {
             </Button>
           </div>
         </div>
+
+        {ongoingProjects.length > 0 && (
+          <div className="mt-8 pb-8">
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm group relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <CardHeader className="relative z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl font-bold text-gray-900">Ongoing Projects</CardTitle>
+                    <CardDescription className="text-gray-600">Projects you are currently part of</CardDescription>
+                  </div>
+                  <Badge className="bg-blue-500 text-white">{ongoingProjects.length} Ongoing</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="relative z-10">
+                <div className="space-y-4">
+                  {ongoingProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                    >
+                      <div>
+                        <p className="font-semibold text-gray-900">{project.title}</p>
+                        <p className="text-sm text-gray-500">
+                          {project.category} • Ongoing • By {project.created_by_name}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <Badge className="bg-blue-500">Accepted</Badge>
+                        <Button variant="ghost" size="sm" asChild className="hover:bg-gray-200">
+                          <Link to={`/projects/${project.id}`}>
+                            <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Recent Activity & Applied Projects */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -398,7 +445,7 @@ export const StudentDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-
+ 
         {/* Completed Projects Section */}
         {completedProjects.length > 0 && (
           <div className="mt-8">

@@ -513,6 +513,99 @@ def register():
     finally:
         conn.close()
 
+@app.route('/api/users/<int:student_id>/applied-projects', methods=['GET'])
+@jwt_required()
+def get_user_applied_projects(student_id: int):
+    conn = sqlite3.connect('launchpad.db')
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('SELECT role FROM users WHERE id = ?', (student_id,))
+        role_row = cursor.fetchone()
+        if not role_row or role_row[0] != 'student':
+            return jsonify({'error': 'Target user is not a student'}), 400
+
+        cursor.execute('''
+            SELECT p.id, p.title, p.description, p.category, p.status, p.team_members, p.tags, p.created_at,
+                   u.name as created_by_name, pa.status as application_status, pa.created_at as applied_at,
+                   pa.is_completed, pa.completed_at, pa.feedback
+            FROM project_applications pa
+            JOIN projects p ON pa.project_id = p.id
+            LEFT JOIN users u ON p.created_by = u.id
+            WHERE pa.student_id = ?
+            ORDER BY pa.created_at DESC
+        ''', (student_id,))
+
+        results = []
+        for row in cursor.fetchall():
+            results.append({
+                'id': row[0],
+                'title': row[1],
+                'description': row[2],
+                'category': row[3],
+                'status': row[4],
+                'team_members': json.loads(row[5]) if row[5] else [],
+                'tags': json.loads(row[6]) if row[6] else [],
+                'created_at': row[7],
+                'created_by_name': row[8],
+                'application_status': row[9],
+                'applied_at': row[10],
+                'is_completed': bool(row[11]) if row[11] is not None else False,
+                'completed_at': row[12],
+                'feedback': row[13]
+            })
+
+        return jsonify(results), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/users/<int:student_id>/completed-projects', methods=['GET'])
+@jwt_required()
+def get_user_completed_projects(student_id: int):
+    conn = sqlite3.connect('launchpad.db')
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('SELECT role FROM users WHERE id = ?', (student_id,))
+        role_row = cursor.fetchone()
+        if not role_row or role_row[0] != 'student':
+            return jsonify({'error': 'Target user is not a student'}), 400
+
+        cursor.execute('''
+            SELECT pa.id, pa.feedback, pa.completed_at, pa.created_at as applied_at,
+                   p.id as project_id, p.title, p.description, p.category, p.status,
+                   u.name as alumni_name, u.email as alumni_email
+            FROM project_applications pa
+            JOIN projects p ON pa.project_id = p.id
+            JOIN users u ON p.created_by = u.id
+            WHERE pa.student_id = ? AND pa.is_completed = 1
+            ORDER BY pa.completed_at DESC
+        ''', (student_id,))
+
+        completed_projects = []
+        for row in cursor.fetchall():
+            completed_projects.append({
+                'application_id': row[0],
+                'feedback': row[1],
+                'completed_at': row[2],
+                'applied_at': row[3],
+                'project_id': row[4],
+                'title': row[5],
+                'description': row[6],
+                'category': row[7],
+                'status': row[8],
+                'alumni_name': row[9],
+                'alumni_email': row[10]
+            })
+
+        return jsonify(completed_projects), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
 @app.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.get_json()

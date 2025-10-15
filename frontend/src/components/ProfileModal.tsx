@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
-import { GraduationCap, Building, MapPin, Briefcase, Globe, Code, X, Phone, Home, Loader2, FileText, Download } from 'lucide-react'
+import { GraduationCap, Building, MapPin, Briefcase, Globe, Code, X, Phone, Home, Loader2, FileText, Download, ArrowRight, CheckCircle } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 interface Skill {
   name: string
@@ -61,6 +62,29 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ userId, isOpen, onCl
   const { token } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [appliedProjects, setAppliedProjects] = useState<Array<{
+    id: number
+    title: string
+    category: string
+    status: string
+    created_by_name: string
+    application_status: string
+    applied_at: string
+    is_completed?: boolean
+  }>>([])
+  const [completedProjects, setCompletedProjects] = useState<Array<{
+    application_id: number
+    feedback: string
+    completed_at: string
+    applied_at: string
+    project_id: number
+    title: string
+    description: string
+    category: string
+    status: string
+    alumni_name: string
+    alumni_email: string
+  }>>([])
 
   const fetchProfile = async () => {
     setLoading(true)
@@ -88,10 +112,31 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ userId, isOpen, onCl
     }
   }
 
+  const fetchProjects = async () => {
+    if (!token) return
+    try {
+      const [appliedRes, completedRes] = await Promise.all([
+        fetch(`https://alumconnect-s4c7.onrender.com/api/users/${userId}/applied-projects`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`https://alumconnect-s4c7.onrender.com/api/users/${userId}/completed-projects`, { headers: { Authorization: `Bearer ${token}` } })
+      ])
+      if (appliedRes.ok) {
+        const data = await appliedRes.json()
+        setAppliedProjects(data)
+      }
+      if (completedRes.ok) {
+        const data = await completedRes.json()
+        setCompletedProjects(data)
+      }
+    } catch (e) {
+      console.error('Error fetching projects for profile modal', e)
+    }
+  }
+
   useEffect(() => {
     if (isOpen && userId) {
 
       fetchProfile()
+      fetchProjects()
     }
   }, [userId, isOpen, token])
 
@@ -240,6 +285,64 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ userId, isOpen, onCl
 
                 {/* Main Content Area */}
                 <div className="lg:col-span-2 space-y-6">
+                  {appliedProjects.filter(p => p.application_status === 'accepted' && p.status === 'active' && !p.is_completed).length > 0 && (
+                    <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+                      <CardHeader>
+                        <CardTitle>Ongoing Projects</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {appliedProjects
+                            .filter(p => p.application_status === 'accepted' && p.status === 'active' && !p.is_completed)
+                            .map((project) => (
+                              <div key={project.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                <div>
+                                  <p className="font-semibold text-gray-900">{project.title}</p>
+                                  <p className="text-sm text-gray-500">{project.category} • Ongoing • By {project.created_by_name}</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <Badge className="bg-blue-500 text-white">Accepted</Badge>
+                                  <Button variant="ghost" size="sm" asChild>
+                                    <Link to={`/projects/${project.id}`}>
+                                      <ArrowRight className="h-4 w-4" />
+                                    </Link>
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {completedProjects.length > 0 && (
+                    <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          Completed Projects
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {completedProjects.map((p) => (
+                            <div key={p.application_id} className="p-4 rounded-xl bg-gray-50">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-semibold text-gray-900">{p.title}</p>
+                                  <p className="text-sm text-gray-500">{p.category} • Completed</p>
+                                </div>
+                                <Badge className="bg-green-500 text-white">Completed</Badge>
+                              </div>
+                              {p.feedback && (
+                                <p className="text-sm text-gray-600 mt-2 line-clamp-3">{p.feedback}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                   {/* Professional Information */}
                   <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
                     <CardHeader>
