@@ -537,6 +537,12 @@ export const MessagesPage: React.FC = () => {
                             </Badge>
                           )}
                         </div>
+                        {conversation.other_user_role !== 'alumni' && (() => {
+                          const yr = availableUsers.find(u => u.id === conversation.other_user_id)?.graduation_year
+                          return yr ? (
+                            <p className="text-xs text-gray-500">Class of {yr}</p>
+                          ) : null
+                        })()}
                         {conversation.last_message && (
                           <p className="text-xs md:text-sm text-gray-500 truncate">
                             {conversation.last_message}
@@ -618,6 +624,12 @@ export const MessagesPage: React.FC = () => {
                       <p className="text-xs md:text-sm text-gray-500">
                         {selectedConversation.other_user_role === 'alumni' ? 'Founder' : 'Student'}
                       </p>
+                      {selectedConversation.other_user_role !== 'alumni' && (() => {
+                        const yr = availableUsers.find(u => u.id === selectedConversation.other_user_id)?.graduation_year
+                        return yr ? (
+                          <p className="text-xs md:text-sm text-gray-500">Class of {yr}</p>
+                        ) : null
+                      })()}
                     </div>
                   </div>
                   <Button
