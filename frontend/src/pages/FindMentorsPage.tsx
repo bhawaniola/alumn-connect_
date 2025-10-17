@@ -41,6 +41,7 @@ interface Alumni {
   years_of_experience?: number
   domain?: string
   tech_skills?: string[]
+  is_available?: boolean
 }
 
 export const FindMentorsPage: React.FC = () => {
@@ -63,6 +64,7 @@ export const FindMentorsPage: React.FC = () => {
   const [domainFilter, setDomainFilter] = useState<string>('all')
   const [workPreferenceFilter, setWorkPreferenceFilter] = useState<string>('all')
   const [experienceFilter, setExperienceFilter] = useState<string>('all')
+  const [availabilityFilter, setAvailabilityFilter] = useState<string>('all')
 
   useEffect(() => {
     const fetchAlumni = async () => {
@@ -142,8 +144,17 @@ export const FindMentorsPage: React.FC = () => {
       }
     }
 
+    // Availability filter
+    if (availabilityFilter !== 'all') {
+      if (availabilityFilter === 'available') {
+        filtered = filtered.filter(a => a.is_available === true)
+      } else if (availabilityFilter === 'unavailable') {
+        filtered = filtered.filter(a => a.is_available === false)
+      }
+    }
+
     setFilteredAlumni(filtered)
-  }, [searchQuery, departmentFilter, locationFilter, companyFilter, yearFilter, domainFilter, workPreferenceFilter, experienceFilter, alumni])
+  }, [searchQuery, departmentFilter, locationFilter, companyFilter, yearFilter, domainFilter, workPreferenceFilter, experienceFilter, availabilityFilter, alumni])
 
   const clearFilters = () => {
     setSearchQuery('')
@@ -154,6 +165,7 @@ export const FindMentorsPage: React.FC = () => {
     setDomainFilter('all')
     setWorkPreferenceFilter('all')
     setExperienceFilter('all')
+    setAvailabilityFilter('all')
   }
 
   const handleRequestMentorship = (alumniId: number) => {
@@ -261,7 +273,7 @@ export const FindMentorsPage: React.FC = () => {
                   <SelectValue placeholder="Graduation Year" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Years</SelectItem>
+                  <SelectItem value="all">All Passout Years</SelectItem>
                   {years.map(year => (
                     <SelectItem key={year} value={year!.toString()}>{year}</SelectItem>
                   ))}
@@ -279,6 +291,18 @@ export const FindMentorsPage: React.FC = () => {
                   <SelectItem value="3-5">3-5 years</SelectItem>
                   <SelectItem value="6-10">6-10 years</SelectItem>
                   <SelectItem value="10+">10+ years</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Availability */}
+              <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Availability" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Alumni</SelectItem>
+                  <SelectItem value="available">Available for Mentorship</SelectItem>
+                  <SelectItem value="unavailable">Not Available</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -342,6 +366,14 @@ export const FindMentorsPage: React.FC = () => {
                 <CardContent className="relative z-10 space-y-4">
                   {/* Info badges */}
                   <div className="flex flex-wrap gap-2">
+                    {alumnus.is_available !== undefined && (
+                      <Badge 
+                        variant={alumnus.is_available ? "default" : "secondary"} 
+                        className={`text-xs ${alumnus.is_available ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400'}`}
+                      >
+                        {alumnus.is_available ? '✓ Available' : 'Not Available'}
+                      </Badge>
+                    )}
                     {alumnus.graduation_year && (
                       <Badge variant="secondary" className="text-xs">
                         <GraduationCap className="h-3 w-3 mr-1" />

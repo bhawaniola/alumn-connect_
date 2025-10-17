@@ -172,6 +172,10 @@ def init_db():
         cursor.execute('ALTER TABLE users ADD COLUMN past_projects TEXT')
     except:
         pass
+    try:
+        cursor.execute('ALTER TABLE users ADD COLUMN is_available BOOLEAN DEFAULT 1')
+    except:
+        pass
     
     # Add new columns to project_positions table if they don't exist
     try:
@@ -1391,7 +1395,7 @@ def get_profile():
             SELECT id, name, email, role, graduation_year, department, hall, branch, bio,
                    current_company, current_position, location, work_preference,
                    phone, website, linkedin, github, avatar, program, joining_year,
-                   institute, specialization, past_projects, cv_pdf
+                   institute, specialization, past_projects, cv_pdf, is_available
             FROM users WHERE id = ?
         ''', (user_id,))
         user_data = cursor.fetchone()
@@ -1436,6 +1440,7 @@ def get_profile():
             'specialization': user_data[21],
             'past_projects': json.loads(user_data[22]) if user_data[22] else [],
             'cv_pdf': user_data[23],
+            'is_available': bool(user_data[24]) if user_data[24] is not None else True,
             'skills': [{'name': s[0], 'type': s[1], 'proficiency': s[2]} for s in skills_data],
             'achievements': [{'title': a[0], 'description': a[1], 'type': a[2], 'date_earned': a[3], 'issuer': a[4]} for a in achievements_data],
             'languages': [{'name': l[0], 'proficiency': l[1]} for l in languages_data]
@@ -1552,7 +1557,8 @@ def update_profile():
                 joining_year = COALESCE(?, joining_year),
                 institute = COALESCE(?, institute),
                 specialization = COALESCE(?, specialization),
-                past_projects = COALESCE(?, past_projects)
+                past_projects = COALESCE(?, past_projects),
+                is_available = COALESCE(?, is_available)
             WHERE id = ?
         ''', (
             data.get('name'), data.get('bio'), data.get('hall'), data.get('branch'), data.get('graduation_year'),
@@ -1560,7 +1566,9 @@ def update_profile():
             data.get('work_preference'), data.get('phone'), data.get('website'),
             data.get('linkedin'), data.get('github'), data.get('avatar'),
             data.get('program'), data.get('joining_year'), data.get('institute'),
-            data.get('specialization'), past_projects_json, user_id
+            data.get('specialization'), past_projects_json, 
+            1 if data.get('is_available') else 0 if data.get('is_available') is not None else None,
+            user_id
         ))
         
         # Update skills if provided
@@ -1966,15 +1974,27 @@ def get_alumni():
     conn = sqlite3.connect('launchpad.db')
     cursor = conn.cursor()
     
+    # Get availability filter from query params
+    availability_filter = request.args.get('availability', 'all')
+    
     try:
-        cursor.execute('''
+        query = '''
             SELECT id, name, email, graduation_year, department, hall, branch, bio,
                    current_company, current_position, location, work_preference,
-                   linkedin, github, years_of_experience, domain, tech_skills
+                   linkedin, github, years_of_experience, domain, tech_skills, is_available
             FROM users
             WHERE role = 'alumni'
-            ORDER BY name
-        ''')
+        '''
+        
+        # Add availability filter
+        if availability_filter == 'available':
+            query += ' AND is_available = 1'
+        elif availability_filter == 'unavailable':
+            query += ' AND is_available = 0'
+        
+        query += ' ORDER BY name'
+        
+        cursor.execute(query)
         
         alumni = []
         for row in cursor.fetchall():
@@ -1995,7 +2015,8 @@ def get_alumni():
                 'github': row[13],
                 'years_of_experience': row[14],
                 'domain': row[15],
-                'tech_skills': json.loads(row[16]) if row[16] else []
+                'tech_skills': json.loads(row[16]) if row[16] else [],
+                'is_available': bool(row[17]) if row[17] is not None else True
             })
         
         return jsonify(alumni), 200

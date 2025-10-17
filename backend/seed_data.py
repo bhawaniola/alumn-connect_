@@ -370,8 +370,8 @@ def seed_database():
             INSERT INTO users (name, email, password_hash, role, graduation_year, department, hall, branch, bio,
                                current_company, current_position, location, work_preference, phone, website,
                                linkedin, github, avatar, years_of_experience, domain, tech_skills, program,
-                               joining_year, institute, specialization, past_projects)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                               joining_year, institute, specialization, past_projects, is_available)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (user['name'], user['email'], password_hash, user['role'], user['graduation_year'], 
               user['department'], user.get('hall'), user.get('branch'), user.get('bio'),
               user.get('current_company'), user.get('current_position'), user.get('location'),
@@ -379,7 +379,8 @@ def seed_database():
               user.get('linkedin'), user.get('github'), user.get('avatar'),
               user.get('years_of_experience'), user.get('domain'), user.get('tech_skills'),
               user.get('program'), user.get('joining_year'), user.get('institute'),
-              user.get('specialization'), user.get('past_projects')))
+              user.get('specialization'), user.get('past_projects'), 
+              1 if user['role'] == 'alumni' else None))
         user_ids[user['email']] = cursor.lastrowid
 
     # ----------------- User Skills -----------------

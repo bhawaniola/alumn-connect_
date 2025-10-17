@@ -406,7 +406,7 @@ export const MessagesPage: React.FC = () => {
                       onChange={(e) => setSelectedGraduationYear(e.target.value)}
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="all">All Years</option>
+                      <option value="all">All Passout Years</option>
                       {graduationYears.map(year => (
                         <option key={year} value={year?.toString()}>{year}</option>
                       ))}
