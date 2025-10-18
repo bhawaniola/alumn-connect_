@@ -6,8 +6,7 @@ import { Button } from '../components/ui/button'
 import { Textarea } from '../components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog'
 import { Avatar, AvatarFallback } from '../components/ui/avatar'
-import { Briefcase, Users, Loader2, Send, CheckCircle, ArrowLeft, MapPin, Clock, DollarSign, UserCheck, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Edit, Mail, Phone, Globe, Award, TrendingUp, Handshake, Star, ChevronDown, Calendar, Heart, X } from 'lucide-react'
-import { ProfileModal } from '../components/ProfileModal'
+import { Briefcase, Users, Loader2, Send, CheckCircle, ArrowLeft, MapPin, Clock, DollarSign, UserCheck, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Edit, Mail, Phone, Globe, Award, TrendingUp, Handshake, Star, ChevronDown, Calendar, Heart, X, ChevronUp } from 'lucide-react'
 
 interface Position {
   id: number
@@ -78,7 +77,8 @@ export const ProjectDetailPage: React.FC = () => {
   const [related, setRelated] = useState<Project[]>([])
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
   const [isTeamExpanded, setIsTeamExpanded] = useState(false)
-
+  const [isPositionsExpanded, setIsPositionsExpanded] = useState(false)
+  const [expandedPositions, setExpandedPositions] = useState({})
   const API_BASE = 'https://alumconnect-s4c7.onrender.com'
   const abs = (url?: string) => {
     if (!url) return ''
@@ -633,248 +633,286 @@ export const ProjectDetailPage: React.FC = () => {
               )}
 
               {/* Open Positions */}
-              {project.positions && project.positions.filter(p => p.is_active).length > 0 && (
-                <div data-section="positions" className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-                  <div className="flex items-center space-x-4 mb-6">
-                    <div className="h-12 w-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg">
-                      <UserCheck className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-3xl font-bold text-gray-900">Open Positions</h2>
-                      <p className="text-sm text-gray-500">Join our team and make an impact</p>
-                    </div>
+{project.positions && project.positions.filter(p => p.is_active).length > 0 && (
+  <div data-section="positions" className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+    <div 
+      className="flex items-center justify-between mb-6 cursor-pointer"
+      onClick={() => setIsPositionsExpanded(!isPositionsExpanded)}
+    >
+      <div className="flex items-center space-x-4">
+        <div className="h-12 w-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg">
+          <UserCheck className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Open Positions</h2>
+          <p className="text-sm text-gray-500">Join our team and make an impact</p>
+        </div>
+      </div>
+      <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+        {isPositionsExpanded ? (
+          <ChevronUp className="h-6 w-6 text-gray-600" />
+        ) : (
+          <ChevronDown className="h-6 w-6 text-gray-600" />
+        )}
+      </button>
+    </div>
+    {isPositionsExpanded && (
+      <div className="space-y-5">
+        {project.positions.filter(p => p.is_active).map((position) => (
+          <div 
+            key={position.id}
+            className="p-6 rounded-2xl border-2 border-gray-200 hover:border-purple-300 transition-all bg-gradient-to-br from-white to-gray-50"
+          >
+            <div 
+              className="flex items-start justify-between cursor-pointer"
+              onClick={() => setExpandedPositions(prev => ({
+                ...prev,
+                [position.id]: !prev[position.id]
+              }))}
+            >
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{position.title}</h3>
+                {!expandedPositions[position.id] && (
+                  <p className="text-gray-500 text-sm">Click to view details</p>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <Badge 
+                  variant={position.is_active ? "default" : "secondary"}
+                  className="whitespace-nowrap bg-green-100 text-green-700 border-green-200"
+                >
+                  {position.is_active ? 'Active' : 'Filled'}
+                </Badge>
+                <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                  {expandedPositions[position.id] ? (
+                    <ChevronUp className="h-5 w-5 text-gray-600" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-gray-600" />
+                  )}
+                </button>
+              </div>
+            </div>
+            
+            {expandedPositions[position.id] && (
+              <div className="mt-4 pt-4 border-t-2 border-gray-200">
+                <p className="text-gray-600 leading-relaxed mb-4">{position.description}</p>
+                
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                    {position.filled_count}/{position.count} filled
+                  </span>
+                </div>
+                
+                {/* Position Details Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+              {position.stipend && (
+                <div className="flex items-center space-x-3 p-4 rounded-xl bg-green-50 border-2 border-green-200">
+                  <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <DollarSign className="h-5 w-5 text-green-600" />
                   </div>
-                  <div className="space-y-5">
-                    {project.positions.filter(p => p.is_active).map((position) => (
-                      <div 
-                        key={position.id}
-                        className="p-6 rounded-2xl border-2 border-gray-200 hover:border-purple-300 hover:shadow-lg transition-all bg-gradient-to-br from-white to-gray-50"
-                      >
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">{position.title}</h3>
-                            <p className="text-gray-600 leading-relaxed">{position.description}</p>
-                          </div>
-                          <div className="flex flex-col items-end gap-2 ml-4">
-                            <Badge 
-                              variant={position.is_active ? "default" : "secondary"}
-                              className="whitespace-nowrap bg-green-100 text-green-700 border-green-200"
-                            >
-                              {position.is_active ? 'Active' : 'Filled'}
-                            </Badge>
-                            <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                              {position.filled_count}/{position.count} filled
-                            </span>
-                          </div>
-                        </div>
-                        
-                        {/* Position Details Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                          {position.stipend && (
-                            <div className="flex items-center space-x-3 p-4 rounded-xl bg-green-50 border-2 border-green-200">
-                              <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
-                                <DollarSign className="h-5 w-5 text-green-600" />
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-600 font-medium">Stipend</p>
-                                <p className="text-lg font-bold text-green-600">₹{position.stipend.toLocaleString()}</p>
-                              </div>
-                            </div>
-                          )}
-                          {position.duration && (
-                            <div className="flex items-center space-x-3 p-4 rounded-xl bg-blue-50 border-2 border-blue-200">
-                              <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                <Clock className="h-5 w-5 text-blue-600" />
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-600 font-medium">Duration</p>
-                                <p className="text-lg font-bold text-blue-600">{position.duration}</p>
-                              </div>
-                            </div>
-                          )}
-                          {position.location && (
-                            <div className="flex items-center space-x-3 p-4 rounded-xl bg-purple-50 border-2 border-purple-200">
-                              <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                <MapPin className="h-5 w-5 text-purple-600" />
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-600 font-medium">Location</p>
-                                <p className="text-lg font-bold text-purple-600">{position.location}</p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {position.required_skills && position.required_skills.length > 0 && (
-                          <div className="mb-4 p-4 rounded-xl bg-blue-50 border border-blue-100">
-                            <p className="text-sm font-bold text-gray-700 mb-3">Required Skills:</p>
-                            <div className="flex flex-wrap gap-2">
-                              {position.required_skills.map((skill, idx) => (
-                                <Badge 
-                                  key={idx} 
-                                  variant="outline" 
-                                  className="text-sm bg-white border-2 border-blue-300 text-blue-700 px-3 py-1 font-medium"
-                                >
-                                  {skill}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {position.selected_students && position.selected_students.length > 0 && (
-                          <div className="mt-4 pt-4 border-t-2 border-gray-200">
-                            <p className="text-sm font-bold text-gray-700 mb-3">Selected Candidates:</p>
-                            <div className="space-y-2">
-                              {position.selected_students.map((student) => (
-                                <div 
-                                  key={student.id}
-                                  className="flex items-center space-x-3 p-3 rounded-xl bg-green-50 border-2 border-green-200 cursor-pointer hover:bg-green-100 hover:scale-105 transition-all"
-                                  onClick={() => {
-                                    setProfileModalUserId(student.id)
-                                    setIsProfileModalOpen(true)
-                                  }}
-                                >
-                                  <Avatar className="h-10 w-10 ring-2 ring-green-300">
-                                    <AvatarFallback className="bg-gradient-to-br from-green-400 to-emerald-500 text-white font-bold">
-                                      {student?.name ? student.name.split(' ').map(n => n[0]).join('').toUpperCase() : '?'}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex-1">
-                                    <p className="font-bold text-gray-900">{student.name}</p>
-                                    <p className="text-xs text-gray-600">{student.email}</p>
-                                  </div>
-                                  <CheckCircle className="h-5 w-5 text-green-600" />
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {user && user.role === 'student' && position.is_active && (
-                          <div className="mt-4">
-                            {positionApplications[position.id.toString()] ? (
-                              <div className={`p-5 rounded-xl border-2 ${
-                                positionApplications[position.id.toString()].status === 'accepted' 
-                                  ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300' 
-                                  : positionApplications[position.id.toString()].status === 'declined' 
-                                  ? 'bg-gradient-to-br from-red-50 to-pink-50 border-red-300' 
-                                  : 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300'
-                              }`}>
-                                <div className="flex items-center justify-between mb-3">
-                                  <div className="flex items-center space-x-3">
-                                    {positionApplications[position.id.toString()].status === 'accepted' ? (
-                                      <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
-                                        <CheckCircle className="h-7 w-7 text-green-600" />
-                                      </div>
-                                    ) : positionApplications[position.id.toString()].status === 'declined' ? (
-                                      <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center">
-                                        <X className="h-7 w-7 text-red-600" />
-                                      </div>
-                                    ) : (
-                                      <div className="h-12 w-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                                        <Clock className="h-7 w-7 text-yellow-600" />
-                                      </div>
-                                    )}
-                                    <div>
-                                      <p className="font-bold text-gray-900 text-lg">
-                                        {positionApplications[position.id.toString()].status === 'accepted' 
-                                          ? 'Application Accepted!' 
-                                          : positionApplications[position.id.toString()].status === 'declined' 
-                                          ? 'Application Declined' 
-                                          : 'Application Pending'}
-                                      </p>
-                                      <p className="text-sm text-gray-600">
-                                        Applied on {new Date(positionApplications[position.id.toString()].applied_at).toLocaleDateString()}
-                                        {positionApplications[position.id.toString()].is_legacy && (
-                                          <span className="ml-2 text-xs text-blue-600">(General Application)</span>
-                                        )}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <Badge 
-                                    className={`${
-                                      positionApplications[position.id.toString()].status === 'accepted' ? 'bg-green-600 text-white' : 
-                                      positionApplications[position.id.toString()].status === 'declined' ? 'bg-red-600 text-white' : 
-                                      'bg-yellow-600 text-white'
-                                    } border-0 font-bold px-4 py-2 text-sm`}
-                                  >
-                                    {positionApplications[position.id.toString()].status.toUpperCase()}
-                                  </Badge>
-                                </div>
-                                {positionApplications[position.id.toString()].status === 'pending' && (
-                                  <p className="text-sm text-gray-600 mt-2 pl-15">
-                                    Your application is under review. We'll notify you once a decision is made.
-                                  </p>
-                                )}
-                                {positionApplications[position.id.toString()].status === 'accepted' && (
-                                  <p className="text-sm text-green-700 mt-2 pl-15 font-medium">
-                                    Congratulations! The project creator will contact you soon.
-                                  </p>
-                                )}
-                              </div>
-                            ) : (
-                              <Dialog open={isApplyDialogOpen && selectedPosition === position.id} onOpenChange={(open) => {
-                                setIsApplyDialogOpen(open)
-                                if (!open) {
-                                  setSelectedPosition(null)
-                                  setApplicationMessage('')
-                                }
-                              }}>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    size="lg"
-                                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-6 rounded-xl shadow-lg"
-                                    onClick={() => {
-                                      setSelectedPosition(position.id)
-                                      setIsApplyDialogOpen(true)
-                                    }}
-                                  >
-                                    Apply for this position →
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-md">
-                                  <DialogHeader>
-                                    <DialogTitle>Apply for {position.title}</DialogTitle>
-                                    <DialogDescription>
-                                      Write a message to introduce yourself and explain why you're interested in this position.
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  <div className="space-y-4">
-                                    <Textarea
-                                      placeholder="Tell us about yourself and why you want this position..."
-                                      value={applicationMessage}
-                                      onChange={(e) => setApplicationMessage(e.target.value)}
-                                      rows={4}
-                                    />
-                                    <Button 
-                                      onClick={handleApply} 
-                                      disabled={isApplying || !applicationMessage.trim()}
-                                      className="w-full"
-                                    >
-                                      {isApplying ? (
-                                        <>
-                                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                          Submitting...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Send className="mr-2 h-4 w-4" />
-                                          Submit Application
-                                        </>
-                                      )}
-                                    </Button>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                  <div>
+                    <p className="text-xs text-gray-600 font-medium">Stipend</p>
+                    <p className="text-lg font-bold text-green-600">₹{position.stipend.toLocaleString()}</p>
                   </div>
                 </div>
               )}
+              {position.duration && (
+                <div className="flex items-center space-x-3 p-4 rounded-xl bg-blue-50 border-2 border-blue-200">
+                  <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-medium">Duration</p>
+                    <p className="text-lg font-bold text-blue-600">{position.duration}</p>
+                  </div>
+                </div>
+              )}
+              {position.location && (
+                <div className="flex items-center space-x-3 p-4 rounded-xl bg-purple-50 border-2 border-purple-200">
+                  <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <MapPin className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-medium">Location</p>
+                    <p className="text-lg font-bold text-purple-600">{position.location}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {position.required_skills && position.required_skills.length > 0 && (
+              <div className="mb-4 p-4 rounded-xl bg-blue-50 border border-blue-100">
+                <p className="text-sm font-bold text-gray-700 mb-3">Required Skills:</p>
+                <div className="flex flex-wrap gap-2">
+                  {position.required_skills.map((skill, idx) => (
+                    <Badge 
+                      key={idx} 
+                      variant="outline" 
+                      className="text-sm bg-white border-2 border-blue-300 text-blue-700 px-3 py-1 font-medium"
+                    >
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {position.selected_students && position.selected_students.length > 0 && (
+              <div className="mt-4 pt-4 border-t-2 border-gray-200">
+                <p className="text-sm font-bold text-gray-700 mb-3">Selected Candidates:</p>
+                <div className="space-y-2">
+                  {position.selected_students.map((student) => (
+                    <div 
+                      key={student.id}
+                      className="flex items-center space-x-3 p-3 rounded-xl bg-green-50 border-2 border-green-200 cursor-pointer hover:bg-green-100 hover:scale-105 transition-all"
+                      onClick={() => {
+                        setProfileModalUserId(student.id)
+                        setIsProfileModalOpen(true)
+                      }}
+                    >
+                      <Avatar className="h-10 w-10 ring-2 ring-green-300">
+                        <AvatarFallback className="bg-gradient-to-br from-green-400 to-emerald-500 text-white font-bold">
+                          {student?.name ? student.name.split(' ').map(n => n[0]).join('').toUpperCase() : '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="font-bold text-gray-900">{student.name}</p>
+                        <p className="text-xs text-gray-600">{student.email}</p>
+                      </div>
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {user && user.role === 'student' && position.is_active && (
+              <div className="mt-4">
+                {positionApplications[position.id.toString()] ? (
+                  <div className={`p-5 rounded-xl border-2 ${
+                    positionApplications[position.id.toString()].status === 'accepted' 
+                      ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300' 
+                      : positionApplications[position.id.toString()].status === 'declined' 
+                      ? 'bg-gradient-to-br from-red-50 to-pink-50 border-red-300' 
+                      : 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300'
+                  }`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        {positionApplications[position.id.toString()].status === 'accepted' ? (
+                          <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <CheckCircle className="h-7 w-7 text-green-600" />
+                          </div>
+                        ) : positionApplications[position.id.toString()].status === 'declined' ? (
+                          <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center">
+                            <X className="h-7 w-7 text-red-600" />
+                          </div>
+                        ) : (
+                          <div className="h-12 w-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <Clock className="h-7 w-7 text-yellow-600" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-bold text-gray-900 text-lg">
+                            {positionApplications[position.id.toString()].status === 'accepted' 
+                              ? 'Application Accepted!' 
+                              : positionApplications[position.id.toString()].status === 'declined' 
+                              ? 'Application Declined' 
+                              : 'Application Pending'}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Applied on {new Date(positionApplications[position.id.toString()].applied_at).toLocaleDateString()}
+                            {positionApplications[position.id.toString()].is_legacy && (
+                              <span className="ml-2 text-xs text-blue-600">(General Application)</span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge 
+                        className={`${
+                          positionApplications[position.id.toString()].status === 'accepted' ? 'bg-green-600 text-white' : 
+                          positionApplications[position.id.toString()].status === 'declined' ? 'bg-red-600 text-white' : 
+                          'bg-yellow-600 text-white'
+                        } border-0 font-bold px-4 py-2 text-sm`}
+                      >
+                        {positionApplications[position.id.toString()].status.toUpperCase()}
+                      </Badge>
+                    </div>
+                    {positionApplications[position.id.toString()].status === 'pending' && (
+                      <p className="text-sm text-gray-600 mt-2 pl-15">
+                        Your application is under review. We'll notify you once a decision is made.
+                      </p>
+                    )}
+                    {positionApplications[position.id.toString()].status === 'accepted' && (
+                      <p className="text-sm text-green-700 mt-2 pl-15 font-medium">
+                        Congratulations! The project creator will contact you soon.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <Dialog open={isApplyDialogOpen && selectedPosition === position.id} onOpenChange={(open) => {
+                    setIsApplyDialogOpen(open)
+                    if (!open) {
+                      setSelectedPosition(null)
+                      setApplicationMessage('')
+                    }
+                  }}>
+                    <DialogTrigger asChild>
+                      <Button
+                        size="lg"
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-6 rounded-xl shadow-lg"
+                        onClick={() => {
+                          setSelectedPosition(position.id)
+                          setIsApplyDialogOpen(true)
+                        }}
+                      >
+                        Apply for this position →
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Apply for {position.title}</DialogTitle>
+                        <DialogDescription>
+                          Write a message to introduce yourself and explain why you're interested in this position.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <Textarea
+                          placeholder="Tell us about yourself and why you want this position..."
+                          value={applicationMessage}
+                          onChange={(e) => setApplicationMessage(e.target.value)}
+                          rows={4}
+                        />
+                        <Button 
+                          onClick={handleApply} 
+                          disabled={isApplying || !applicationMessage.trim()}
+                          className="w-full"
+                        >
+                          {isApplying ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Submitting...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="mr-2 h-4 w-4" />
+                              Submit Application
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
+            )}
+            </div>
+            )}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
 
               {/* Tags */}
               {project.tags && project.tags.length > 0 && (
