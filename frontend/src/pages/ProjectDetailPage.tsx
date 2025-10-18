@@ -111,6 +111,7 @@ export const ProjectDetailPage: React.FC = () => {
     }
   }, [applicationSubmitted])
 
+  // Initialize team categories when project changes
   useEffect(() => {
     if (project?.team_roles && project.team_roles.length > 0) {
       const categorizeRole = (role: string): string => {
@@ -122,16 +123,16 @@ export const ProjectDetailPage: React.FC = () => {
         if (roleLower.includes('developer') || roleLower.includes('engineer') || roleLower.includes('designer')) return 'Core Team'
         return 'Team Members'
       }
-
-      const categorized = project.team_roles.reduce((acc, member) => {
+      const categorized = project.team_roles.reduce((acc: Record<string, any[]>, member) => {
         const category = categorizeRole(member.role)
         if (!acc[category]) acc[category] = []
         acc[category].push(member)
         return acc
-      }, {} as Record<string, typeof project.team_roles>)
-
-      const initialState = Object.keys(categorized).reduce((acc, key) => ({ ...acc, [key]: false }), {})
+      }, {})
+      const initialState = Object.keys(categorized).reduce((acc, key) => ({ ...acc, [key]: true }), {})
       setExpandedCategories(initialState)
+    } else {
+      setExpandedCategories({})
     }
   }, [project])
 
@@ -520,122 +521,7 @@ export const ProjectDetailPage: React.FC = () => {
                 )
               })()}
 
-              {/* Team Section */}
-              {project.team_roles && project.team_roles.length > 0 && (() => {
-                const categorizeRole = (role: string): string => {
-                  const roleLower = role.toLowerCase()
-                  if (roleLower.includes('advisor') || roleLower.includes('mentor')) return 'Advisors'
-                  if (roleLower.includes('lead') || roleLower.includes('head') || roleLower.includes('ceo') || roleLower.includes('cto') || roleLower.includes('founder') || roleLower.includes('director') || roleLower.includes('chief')) return 'Leadership'
-                  if (roleLower.includes('investor') || roleLower.includes('partner')) return 'Investors'
-                  if (roleLower.includes('intern') || roleLower.includes('trainee')) return 'Interns'
-                  if (roleLower.includes('developer') || roleLower.includes('engineer') || roleLower.includes('designer')) return 'Core Team'
-                  return 'Team Members'
-                }
-
-                const categorized = project.team_roles.reduce((acc, member) => {
-                  const category = categorizeRole(member.role)
-                  if (!acc[category]) acc[category] = []
-                  acc[category].push(member)
-                  return acc
-                }, {} as Record<string, typeof project.team_roles>)
-
-                const toggleCategory = (category: string) => {
-                  setExpandedCategories(prev => ({ ...prev, [category]: !prev[category] }))
-                }
-
-                const categoryColors: Record<string, { bg: string, icon: string, border: string, gradient: string }> = {
-                  'Leadership': { bg: 'bg-purple-50', icon: 'text-purple-600', border: 'border-purple-200', gradient: 'from-purple-500 to-pink-500' },
-                  'Advisors': { bg: 'bg-blue-50', icon: 'text-blue-600', border: 'border-blue-200', gradient: 'from-blue-500 to-cyan-500' },
-                  'Investors': { bg: 'bg-green-50', icon: 'text-green-600', border: 'border-green-200', gradient: 'from-green-500 to-emerald-500' },
-                  'Core Team': { bg: 'bg-orange-50', icon: 'text-orange-600', border: 'border-orange-200', gradient: 'from-orange-500 to-red-500' },
-                  'Interns': { bg: 'bg-pink-50', icon: 'text-pink-600', border: 'border-pink-200', gradient: 'from-pink-500 to-rose-500' },
-                  'Team Members': { bg: 'bg-gray-50', icon: 'text-gray-600', border: 'border-gray-200', gradient: 'from-gray-500 to-slate-500' }
-                }
-
-                return (
-                  <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-                    <button
-                      onClick={() => setIsTeamExpanded(!isTeamExpanded)}
-                      className="w-full flex items-center justify-between hover:bg-gray-50 p-4 rounded-xl transition-all"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="h-14 w-14 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
-                          <Users className="h-7 w-7 text-white" />
-                        </div>
-                        <div className="text-left">
-                          <h2 className="text-3xl font-bold text-gray-900">Meet The Team</h2>
-                          <p className="text-sm text-gray-500 font-medium">{project.team_roles.length} talented members</p>
-                        </div>
-                      </div>
-                      <div className={`p-2 rounded-full bg-gray-100 transition-transform ${isTeamExpanded ? 'rotate-180' : ''}`}>
-                        <ChevronDown className="h-6 w-6 text-gray-600" />
-                      </div>
-                    </button>
-
-                    {isTeamExpanded && (
-                      <div className="mt-6 space-y-4">
-                        {Object.entries(categorized).map(([category, members]) => {
-                          const colors = categoryColors[category] || categoryColors['Team Members']
-                          const isExpanded = expandedCategories[category] !== false
-                          
-                          return (
-                            <div key={category} className="border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-gray-300 transition-all">
-                              <button
-                                onClick={() => toggleCategory(category)}
-                                className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors"
-                              >
-                                <div className="flex items-center space-x-4">
-                                  <div className={`h-12 w-12 bg-gradient-to-br ${colors.gradient} rounded-xl flex items-center justify-center shadow-md`}>
-                                    <Users className="h-6 w-6 text-white" />
-                                  </div>
-                                  <div className="text-left">
-                                    <h3 className="text-xl font-bold text-gray-900">{category}</h3>
-                                    <p className="text-sm text-gray-500">{members.length} {members.length === 1 ? 'member' : 'members'}</p>
-                                  </div>
-                                </div>
-                                <div className={`p-2 rounded-full ${colors.bg} transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-                                  <ChevronDown className={`h-5 w-5 ${colors.icon}`} />
-                                </div>
-                              </button>
-                              
-                              {isExpanded && (
-                                <div className="border-t-2 border-gray-200 bg-gradient-to-br from-gray-50 to-white p-5">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {members.map((member, index) => (
-                                      <div key={index} className="p-5 rounded-xl border-2 border-gray-200 bg-white hover:shadow-lg hover:scale-105 transition-all">
-                                        <div className="flex items-start space-x-4">
-                                          <Avatar className="h-14 w-14 ring-2 ring-gray-200">
-                                            <AvatarFallback className={`bg-gradient-to-br ${colors.gradient} text-white text-lg font-bold`}>
-                                            {member?.name ? member.name.split(' ').map(n => n[0]).join('') : '?'}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                          <div className="flex-1">
-                                            <p className="font-bold text-gray-900 text-lg">{member.name}</p>
-                                            <p className={`text-sm font-medium ${colors.icon} mb-3`}>{member.role}</p>
-                                            {member.skills && member.skills.length > 0 && (
-                                              <div className="flex flex-wrap gap-2">
-                                                {member.skills.map((skill, idx) => (
-                                                  <Badge key={idx} variant="outline" className={`text-xs ${colors.bg} ${colors.border} ${colors.icon} font-medium`}>
-                                                    {skill}
-                                                  </Badge>
-                                                ))}
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )
-              })()}
+              {/* Team Section (moved to sidebar) */}
 
               {/* Legacy Team Members */}
               {project.team_members && project.team_members.length > 0 && (!project.team_roles || project.team_roles.length === 0) && (
@@ -1031,29 +917,117 @@ export const ProjectDetailPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Project Creator */}
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Project Creator</h3>
-                  <div 
-                    className="flex items-center space-x-4 cursor-pointer hover:bg-gray-50 p-4 rounded-xl transition-all border-2 border-transparent hover:border-blue-200"
-                    onClick={() => {
-                      setProfileModalUserId(project.created_by_id)
-                      setIsProfileModalOpen(true)
-                    }}
-                  >
-                    <Avatar className="h-14 w-14 ring-2 ring-blue-200">
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-lg font-bold">
-                        {project.created_by_name?.split(' ').map(n => n[0]).join('').toUpperCase() || '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-bold text-gray-900 text-lg">{project.created_by_name}</p>
-                      <p className="text-sm text-gray-500">Project Lead</p>
+              {/* Meet The Team (Sidebar) */}
+              {project.team_roles && project.team_roles.length > 0 && (() => {
+                const categorizeRole = (role: string): string => {
+                  const roleLower = role.toLowerCase()
+                  if (roleLower.includes('advisor') || roleLower.includes('mentor')) return 'Advisors'
+                  if (roleLower.includes('lead') || roleLower.includes('head') || roleLower.includes('ceo') || roleLower.includes('cto') || roleLower.includes('founder') || roleLower.includes('director') || roleLower.includes('chief')) return 'Leadership'
+                  if (roleLower.includes('investor') || roleLower.includes('partner')) return 'Investors'
+                  if (roleLower.includes('intern') || roleLower.includes('trainee')) return 'Interns'
+                  if (roleLower.includes('developer') || roleLower.includes('engineer') || roleLower.includes('designer')) return 'Core Team'
+                  return 'Team Members'
+                }
+
+                const categorized = project.team_roles.reduce((acc: Record<string, typeof project.team_roles>, member) => {
+                  const category = categorizeRole(member.role)
+                  if (!acc[category]) acc[category] = []
+                  acc[category].push(member)
+                  return acc
+                }, {} as Record<string, typeof project.team_roles>)
+
+                const toggleCategory = (category: string) => {
+                  setExpandedCategories(prev => ({ ...prev, [category]: !prev[category] }))
+                }
+
+                const categoryColors: Record<string, { bg: string, icon: string, border: string, gradient: string }> = {
+                  'Leadership': { bg: 'bg-purple-50', icon: 'text-purple-600', border: 'border-purple-200', gradient: 'from-purple-500 to-pink-500' },
+                  'Advisors': { bg: 'bg-blue-50', icon: 'text-blue-600', border: 'border-blue-200', gradient: 'from-blue-500 to-cyan-500' },
+                  'Investors': { bg: 'bg-green-50', icon: 'text-green-600', border: 'border-green-200', gradient: 'from-green-500 to-emerald-500' },
+                  'Core Team': { bg: 'bg-orange-50', icon: 'text-orange-600', border: 'border-orange-200', gradient: 'from-orange-500 to-red-500' },
+                  'Interns': { bg: 'bg-pink-50', icon: 'text-pink-600', border: 'border-pink-200', gradient: 'from-pink-500 to-rose-500' },
+                  'Team Members': { bg: 'bg-gray-50', icon: 'text-gray-600', border: 'border-gray-200', gradient: 'from-gray-500 to-slate-500' }
+                }
+
+                return (
+                  <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="p-6">
+                      <button
+                        onClick={() => setIsTeamExpanded(!isTeamExpanded)}
+                        className="w-full flex items-center justify-between hover:bg-gray-50 p-4 rounded-xl transition-all"
+                      >
+                        <div className="text-left">
+                          <h3 className="text-lg font-bold text-gray-900">Meet The Team</h3>
+                          <p className="text-xs text-gray-500 font-medium">{project.team_roles.length} members</p>
+                        </div>
+                        <div className={`p-2 rounded-full bg-gray-100 transition-transform ${isTeamExpanded ? 'rotate-180' : ''}`}>
+                          <ChevronDown className="h-5 w-5 text-gray-600" />
+                        </div>
+                      </button>
+
+                      {isTeamExpanded && (
+                        <div className="mt-4 space-y-3">
+                          {Object.entries(categorized).map(([category, members]) => {
+                            const colors = categoryColors[category] || categoryColors['Team Members']
+                            const isExpanded = expandedCategories[category] !== false
+                            return (
+                              <div key={category} className="border border-gray-200 rounded-xl overflow-hidden hover:border-gray-300 transition-all">
+                                <button
+                                  onClick={() => toggleCategory(category)}
+                                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    <div className={`h-10 w-10 bg-gradient-to-br ${colors.gradient} rounded-lg flex items-center justify-center shadow-md`}>
+                                      <Users className="h-5 w-5 text-white" />
+                                    </div>
+                                    <div className="text-left">
+                                      <h4 className="text-sm font-bold text-gray-900">{category}</h4>
+                                      <p className="text-xs text-gray-500">{members.length} {members.length === 1 ? 'member' : 'members'}</p>
+                                    </div>
+                                  </div>
+                                  <div className={`p-2 rounded-full ${colors.bg} transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+                                    <ChevronDown className={`h-4 w-4 ${colors.icon}`} />
+                                  </div>
+                                </button>
+                                {isExpanded && (
+                                  <div className="border-t border-gray-200 bg-gradient-to-br from-gray-50 to-white p-4">
+                                    <div className="space-y-2">
+                                      {members.map((member, index) => (
+                                        <div key={index} className="p-3 rounded-lg border border-gray-200 bg-white hover:shadow-sm transition-all">
+                                          <div className="flex items-start space-x-3">
+                                            <Avatar className="h-10 w-10 ring-1 ring-gray-200">
+                                              <AvatarFallback className={`bg-gradient-to-br ${colors.gradient} text-white text-sm font-bold`}>
+                                                {member?.name ? member.name.split(' ').map(n => n[0]).join('') : '?'}
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex-1 min-w-0">
+                                              <p className="font-bold text-gray-900 text-sm truncate">{member.name}</p>
+                                              <p className={`text-xs font-medium ${colors.icon} mb-1 truncate`}>{member.role}</p>
+                                              {member.skills && member.skills.length > 0 && (
+                                                <div className="flex flex-wrap gap-1">
+                                                  {member.skills.map((skill, idx) => (
+                                                    <Badge key={idx} variant="outline" className={`text-[10px] ${colors.bg} ${colors.border} ${colors.icon} font-medium`}>
+                                                      {skill}
+                                                    </Badge>
+                                                  ))}
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              </div>
+                )
+              })()}
 
               {/* Contact Details */}
               {project.contact_details && (project.contact_details.email || project.contact_details.phone || project.contact_details.website) && (
