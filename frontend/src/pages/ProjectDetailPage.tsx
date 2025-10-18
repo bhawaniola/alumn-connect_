@@ -74,6 +74,7 @@ export const ProjectDetailPage: React.FC = () => {
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null)
   const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false)
   const [carouselIndex, setCarouselIndex] = useState(0)
+  const [highlightIndex, setHighlightIndex] = useState(0)
   const [related, setRelated] = useState<Project[]>([])
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
   const [isTeamExpanded, setIsTeamExpanded] = useState(false)
@@ -495,27 +496,86 @@ export const ProjectDetailPage: React.FC = () => {
               {/* Highlights */}
               {project.highlights && project.highlights.length > 0 && (() => {
                 const items = project.highlights.map((h: any) => typeof h === 'string' ? { text: h } : h)
+                const count = items.length
+                const current = items[(highlightIndex % count + count) % count]
                 return (
-                  <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-3xl shadow-sm border border-orange-100 p-8">
-                    <div className="flex items-center space-x-3 mb-6">
-                      <div className="h-12 w-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                        <Star className="h-6 w-6 text-white" />
-                      </div>
-                      <h2 className="text-3xl font-bold text-gray-900">Key Highlights</h2>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {items.map((item, index: number) => (
-                        <div key={index} className="flex items-start gap-3 p-4 rounded-xl bg-white border border-orange-200 hover:shadow-md transition-all">
-                          {item.image ? (
-                            <img src={abs(item.image)} alt="highlight" className="h-14 w-20 object-cover rounded-md border" />
-                          ) : (
-                            <div className="h-10 w-10 rounded-full bg-orange-50 border border-orange-200 flex items-center justify-center">
-                              <Award className="h-5 w-5 text-orange-500" />
-                            </div>
-                          )}
-                          <p className="text-gray-900 font-medium leading-snug">{item.text}</p>
+                  <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-3xl shadow-sm border border-orange-100 p-0 overflow-hidden">
+                    <div className="px-8 pt-8">
+                      <div className="flex items-center space-x-3 mb-6">
+                        <div className="h-12 w-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                          <Star className="h-6 w-6 text-white" />
                         </div>
-                      ))}
+                        <h2 className="text-3xl font-bold text-gray-900">Key Highlights</h2>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <div className={`grid ${current.image && current.text ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'} gap-0 items-stretch rounded-xl overflow-hidden shadow-lg`}>
+                        {/* Media */}
+                        {current.image && (
+                          <div className="relative min-h-[320px] md:min-h-[400px] bg-gradient-to-br from-orange-50 to-amber-50">
+                            <img
+                              src={abs(current.image)}
+                              alt="highlight"
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
+                          </div>
+                        )}
+                        
+                        {/* Content */}
+                        {current.text && (
+                          <div className="flex items-center justify-center p-8 md:p-12 bg-gradient-to-br from-white to-orange-50/30">
+                            <div className="max-w-2xl">
+                              {/* <div className="mb-6 inline-flex items-center justify-center h-14 w-14 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 shadow-lg">
+                                <Award className="h-7 w-7 text-white" />
+                              </div> */}
+                              <p className="text-xl md:text-2xl text-gray-900 font-semibold leading-relaxed">
+                                {current.text}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Fallback when both are missing */}
+                        {!current.image && !current.text && (
+                          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-100 to-amber-100 min-h-[320px] md:min-h-[400px] p-8">
+                            <div className="h-20 w-20 rounded-full bg-white shadow-xl flex items-center justify-center mb-6">
+                              <Award className="h-10 w-10 text-orange-500" />
+                            </div>
+                            <p className="text-gray-600 text-lg font-medium">No content available</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Controls */}
+                      {count > 1 && (
+                        <>
+                          <button
+                            aria-label="Previous highlight"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/90 hover:bg-white shadow-lg"
+                            onClick={() => setHighlightIndex(i => (i - 1 + count) % count)}
+                          >
+                            <ChevronLeft className="h-5 w-5 text-gray-800" />
+                          </button>
+                          <button
+                            aria-label="Next highlight"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/90 hover:bg-white shadow-lg"
+                            onClick={() => setHighlightIndex(i => (i + 1) % count)}
+                          >
+                            <ChevronRight className="h-5 w-5 text-gray-800" />
+                          </button>
+                          <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 flex gap-2 pb-6">
+                            {items.map((_, idx) => (
+                              <button
+                                key={idx}
+                                aria-label={`Go to highlight ${idx + 1}`}
+                                className={`h-2 rounded-full transition-all ${idx === ((highlightIndex % count + count) % count) ? 'bg-orange-600 w-8' : 'bg-orange-300 w-2'}`}
+                                onClick={() => setHighlightIndex(idx)}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 )
