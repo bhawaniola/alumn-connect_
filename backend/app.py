@@ -3185,6 +3185,14 @@ def get_profile_picture(filename):
     except Exception as e:
         return jsonify({'error': 'File not found'}), 404
 
+# Serve project highlight images
+@app.route('/api/projects/<int:project_id>/highlights/<filename>')
+def get_project_highlight_image(project_id, filename):
+    try:
+        return send_from_directory(os.path.join(app.config['UPLOAD_FOLDER'], 'projects', str(project_id), 'highlights'), filename)
+    except Exception:
+        return jsonify({'error': 'File not found'}), 404
+
 # Upload a blog image (append to images array)
 @app.route('/api/blog/<int:post_id>/images', methods=['POST'])
 @jwt_required()
@@ -3420,6 +3428,50 @@ def upload_project_image(project_id):
 
         return jsonify({'message': 'Image uploaded', 'url': file_url, 'images': images}), 200
         
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Upload a highlight image (returns URL; frontend will attach it to a specific highlight item)
+@app.route('/api/projects/<int:project_id>/highlights/image', methods=['POST'])
+@jwt_required()
+def upload_project_highlight_image(project_id):
+    user_id = get_user_id_from_jwt()
+    try:
+        conn = sqlite3.connect('launchpad.db')
+        cursor = conn.cursor()
+
+        # Check if user is project creator
+        cursor.execute('SELECT created_by FROM projects WHERE id = ?', (project_id,))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({'error': 'Project not found'}), 404
+        creator_id = row[0]
+
+        if creator_id != user_id:
+            return jsonify({'error': 'Only project creator can upload highlight images'}), 403
+
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+
+        # Validate extension
+        filename = secure_filename(file.filename)
+        ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+        if ext not in ['jpg', 'jpeg', 'png', 'gif']:
+            return jsonify({'error': 'Invalid file type. Only JPG, PNG, and GIF are allowed.'}), 400
+
+        # Save to per-project highlights folder
+        unique_filename = f"hl_{uuid.uuid4().hex}.{ext}"
+        folder = os.path.join(app.config['UPLOAD_FOLDER'], 'projects', str(project_id), 'highlights')
+        os.makedirs(folder, exist_ok=True)
+        filepath = os.path.join(folder, unique_filename)
+        file.save(filepath)
+
+        file_url = f"/api/projects/{project_id}/highlights/{unique_filename}"
+        return jsonify({'message': 'Highlight image uploaded', 'url': file_url}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

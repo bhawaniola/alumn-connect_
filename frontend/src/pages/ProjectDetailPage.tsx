@@ -56,7 +56,7 @@ interface Project {
   }>
   partners?: string[]
   funding?: string
-  highlights?: string[]
+  highlights?: Array<string | { text: string; image?: string }>
 }
 
 export const ProjectDetailPage: React.FC = () => {
@@ -492,24 +492,33 @@ export const ProjectDetailPage: React.FC = () => {
               </div>
 
               {/* Highlights */}
-              {project.highlights && project.highlights.length > 0 && (
-                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-3xl shadow-sm border border-orange-100 p-8">
-                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="h-12 w-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                      <Star className="h-6 w-6 text-white" />
-                    </div>
-                    <h2 className="text-3xl font-bold text-gray-900">Key Highlights</h2>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {project.highlights.map((highlight: string, index: number) => (
-                      <div key={index} className="flex items-start space-x-3 p-4 rounded-xl bg-white border border-orange-200 hover:shadow-md transition-all">
-                        <Award className="h-6 w-6 text-orange-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-gray-900 font-medium">{highlight}</p>
+              {project.highlights && project.highlights.length > 0 && (() => {
+                const items = project.highlights.map((h: any) => typeof h === 'string' ? { text: h } : h)
+                return (
+                  <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-3xl shadow-sm border border-orange-100 p-8">
+                    <div className="flex items-center space-x-3 mb-6">
+                      <div className="h-12 w-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                        <Star className="h-6 w-6 text-white" />
                       </div>
-                    ))}
+                      <h2 className="text-3xl font-bold text-gray-900">Key Highlights</h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {items.map((item, index: number) => (
+                        <div key={index} className="flex items-start gap-3 p-4 rounded-xl bg-white border border-orange-200 hover:shadow-md transition-all">
+                          {item.image ? (
+                            <img src={abs(item.image)} alt="highlight" className="h-14 w-20 object-cover rounded-md border" />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-orange-50 border border-orange-200 flex items-center justify-center">
+                              <Award className="h-5 w-5 text-orange-500" />
+                            </div>
+                          )}
+                          <p className="text-gray-900 font-medium leading-snug">{item.text}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )
+              })()}
 
               {/* Team Section */}
               {project.team_roles && project.team_roles.length > 0 && (() => {

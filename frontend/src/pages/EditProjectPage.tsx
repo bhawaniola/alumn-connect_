@@ -20,6 +20,8 @@ interface PositionForm {
   required_skills?: string[]
 }
 
+type HighlightItem = { text: string; image?: string }
+
 interface ProjectForm {
   title: string
   description: string
@@ -41,7 +43,7 @@ interface ProjectForm {
   }>
   partners?: string[]
   funding?: string
-  highlights?: string[]
+  highlights?: Array<string | HighlightItem>
 }
 
 export const EditProjectPage: React.FC = () => {
@@ -54,7 +56,7 @@ export const EditProjectPage: React.FC = () => {
   // images are upload-only now
   const [linksText, setLinksText] = useState('')
   const [partnersText, setPartnersText] = useState('')
-  const [highlightsText, setHighlightsText] = useState('')
+  // structured highlights now
   const [teamRolesText, setTeamRolesText] = useState('')
   const [uploadingImage, setUploadingImage] = useState(false)
   const [uploadingJD, setUploadingJD] = useState(false)
@@ -103,6 +105,35 @@ export const EditProjectPage: React.FC = () => {
     }
   }
 
+  // Upload image for a specific highlight item
+  const uploadHighlightImage = async (index: number, file: File) => {
+    if (!id || !token) return
+    try {
+      const fd = new FormData()
+      fd.append('image', file)
+      const res = await fetch(`https://alumconnect-s4c7.onrender.com/api/projects/${id}/highlights/image`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setForm((prev: ProjectForm | null) => {
+          if (!prev) return prev
+          const next: ProjectForm = { ...prev }
+          const arr = (next.highlights || []).map((h: any) => (typeof h === 'string' ? { text: h } : h))
+          if (arr[index]) arr[index] = { ...arr[index], image: data.url }
+          next.highlights = arr as any
+          return next
+        })
+      } else {
+        console.error('Highlight image upload failed', await res.text())
+      }
+    } catch (e) {
+      console.error('Highlight image upload error', e)
+    }
+  }
+
   useEffect(() => {
     const load = async () => {
       if (!id) return
@@ -133,12 +164,12 @@ export const EditProjectPage: React.FC = () => {
             team_roles: p.team_roles || [],
             partners: p.partners || [],
             funding: p.funding || '',
-            highlights: p.highlights || []
+            highlights: (p.highlights || []).map((h: any) => typeof h === 'string' ? { text: h } : h)
           }
           setForm(loadedForm)
           setLinksText((loadedForm.links || []).map(l => `${l.label}|${l.url}`).join('\n'))
           setPartnersText((loadedForm.partners || []).join('\n'))
-          setHighlightsText((loadedForm.highlights || []).join('\n'))
+          // no longer using highlightsText
           setTeamRolesText((loadedForm.team_roles || []).map(tr => `${tr.name}|${tr.role}|${(tr.skills || []).join(',')}`).join('\n'))
         }
       } catch (e) {
@@ -182,6 +213,24 @@ export const EditProjectPage: React.FC = () => {
 
   const removePosition = (idx: number) => {
     setForm({ ...form, positions: form.positions.filter((_, i) => i !== idx) })
+  }
+
+  // Highlight helpers
+  const updateHighlightText = (idx: number, text: string) => {
+    const arr = (form.highlights || []).map(h => (typeof h === 'string' ? { text: h } : h))
+    arr[idx] = { ...(arr[idx] || { text: '' }), text }
+    setForm({ ...form, highlights: arr })
+  }
+
+  const addHighlight = () => {
+    const arr = (form.highlights || []).map(h => (typeof h === 'string' ? { text: h } : h))
+    arr.push({ text: '' })
+    setForm({ ...form, highlights: arr })
+  }
+
+  const removeHighlight = (idx: number) => {
+    const arr = (form.highlights || []).map(h => (typeof h === 'string' ? { text: h } : h)).filter((_, i) => i !== idx)
+    setForm({ ...form, highlights: arr })
   }
 
   const save = async (e: React.FormEvent) => {
@@ -398,18 +447,43 @@ export const EditProjectPage: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Highlights (one per line)</Label>
-                <Textarea
-                  rows={4}
-                  value={highlightsText}
-                  onChange={(e) => {
-                    const text = e.target.value
-                    setHighlightsText(text)
-                    const highlights = text.split('\n').map(h => h.trim()).filter(Boolean)
-                    setForm({ ...form, highlights })
-                  }}
-                  placeholder={"Featured in TechCrunch\n10,000+ users\nAward-winning design"}
-                />
+                <div className="flex items-center justify-between">
+                  <Label>Highlights</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addHighlight}>Add</Button>
+                </div>
+                <div className="space-y-3">
+                  {(form.highlights || []).length === 0 && (
+                    <p className="text-sm text-muted-foreground">No highlights yet. Click Add to create one.</p>
+                  )}
+                  {(form.highlights || []).map((h, idx) => {
+                    const item = typeof h === 'string' ? { text: h } : h
+                    return (
+                      <div key={idx} className="p-4 rounded-lg border border-gray-200 space-y-2">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+                          <div className="md:col-span-2">
+                            <Label className="text-xs">Text</Label>
+                            <Input value={item.text} onChange={(e) => updateHighlightText(idx, e.target.value)} placeholder="e.g., Featured in TechCrunch" />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Image (optional)</Label>
+                            <div className="flex items-center gap-2">
+                              <Input type="file" accept="image/png,image/jpeg,image/jpg,image/gif" onChange={(e) => e.target.files && e.target.files[0] && uploadHighlightImage(idx, e.target.files[0])} />
+                            </div>
+                          </div>
+                        </div>
+                        {item.image && (
+                          <div className="flex items-center gap-3">
+                            <img src={item.image} alt="highlight" className="w-28 h-20 object-cover rounded-md border" />
+                            <a className="text-sm text-blue-600 hover:underline" href={item.image} target="_blank" rel="noreferrer">Open</a>
+                          </div>
+                        )}
+                        <div className="flex justify-end">
+                          <Button type="button" variant="destructive" size="sm" onClick={() => removeHighlight(idx)}>Remove</Button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
 
               <div className="space-y-3">
