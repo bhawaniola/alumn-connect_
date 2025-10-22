@@ -3541,6 +3541,240 @@ def get_project_jd(project_id, filename):
     except Exception as e:
         return jsonify({'error': 'File not found'}), 404
 
+def update_alumni_dashboard():
+    """
+    Update AlumniDashboard.tsx to show ongoing and completed projects in Recent Activity
+    """
+    import re
+    
+    file_path = 'd:/AlumConnect/frontend/src/pages/AlumniDashboard.tsx'
+    
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # 1. Update the interface
+    content = content.replace(
+        "type: 'mentorship' | 'project_application'",
+        "type: 'mentorship' | 'project_application' | 'project'"
+    )
+    
+    # 2. Update the Promise.all to include projects
+    content = content.replace(
+        "const [mentorshipRes, applicationsRes] = await Promise.all([",
+        "const [mentorshipRes, applicationsRes, projectsRes] = await Promise.all(["
+    )
+    
+    content = content.replace(
+        "fetch('https://alumconnect-s4c7.onrender.com/api/alumni/project-applications', { headers: { Authorization: `Bearer ${token}` } })\n        ])",
+        "fetch('https://alumconnect-s4c7.onrender.com/api/alumni/project-applications', { headers: { Authorization: `Bearer ${token}` } }),\n          fetch('https://alumconnect-s4c7.onrender.com/api/alumni/projects', { headers: { Authorization: `Bearer ${token}` } })\n        ])"
+    )
+    
+    # 3. Add projects processing
+    projects_code = """
+        if (projectsRes.ok) {
+          const projectsData = await projectsRes.json()
+          // Add ongoing and completed projects
+          for (const p of projectsData) {
+            if (p.status === 'active' || p.status === 'completed') {
+              activities.push({
+                id: p.id,
+                type: 'project',
+                title: p.title,
+                description: p.description.length > 100 ? p.description.substring(0, 100) + '...' : p.description,
+                status: p.status,
+                created_at: p.created_at
+              })
+            }
+          }
+        }
+"""
+    
+    content = content.replace(
+        "        // Sort desc by created_at and keep recent ones",
+        projects_code + "\n        // Sort desc by created_at and keep recent ones"
+    )
+    
+    # 4. Update the key to avoid duplicates
+    content = content.replace(
+        '<div key={activity.id} className="flex items-start space-x-3',
+        '<div key={`${activity.type}-${activity.id}`} className="flex items-start space-x-3'
+    )
+    
+    # 5. Update the icon background color logic
+    old_bg = """                      <div className={`p-2 rounded-full ${
+                        activity.type === 'mentorship' 
+                          ? 'bg-purple-100 group-hover:bg-purple-200' 
+                          : 'bg-blue-100 group-hover:bg-blue-200'
+                      } transition-colors duration-200`}>"""
+    
+    new_bg = """                      <div className={`p-2 rounded-full ${
+                        activity.type === 'mentorship' 
+                          ? 'bg-purple-100 group-hover:bg-purple-200' 
+                          : activity.type === 'project'
+                          ? activity.status === 'completed' ? 'bg-green-100 group-hover:bg-green-200' : 'bg-blue-100 group-hover:bg-blue-200'
+                          : 'bg-blue-100 group-hover:bg-blue-200'
+                      } transition-colors duration-200`}>"""
+    
+    content = content.replace(old_bg, new_bg)
+    
+    # 6. Update the icon rendering
+    old_icon = """                        {activity.type === 'mentorship' ? (
+                          <Users className={`h-4 w-4 ${
+                            activity.type === 'mentorship' ? 'text-purple-600' : 'text-blue-600'
+                          }`} />
+                        ) : (
+                          <Briefcase className="h-4 w-4 text-blue-600" />
+                        )}"""
+    
+    new_icon = """                        {activity.type === 'mentorship' ? (
+                          <Users className="h-4 w-4 text-purple-600" />
+                        ) : activity.type === 'project' ? (
+                          activity.status === 'completed' ? (
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <Briefcase className="h-4 w-4 text-blue-600" />
+                          )
+                        ) : (
+                          <Briefcase className="h-4 w-4 text-blue-600" />
+                        )}"""
+    
+    content = content.replace(old_icon, new_icon)
+    
+    # 7. Update the badge rendering
+    old_badge = """                          <Badge 
+                            variant={activity.status === 'pending' ? 'secondary' : 'default'}
+                            className="text-xs"
+                          >
+                            {activity.status}
+                          </Badge>"""
+    
+    new_badge = """                          <Badge 
+                            variant={
+                              activity.status === 'pending' ? 'secondary' : 
+                              activity.status === 'completed' ? 'default' :
+                              activity.status === 'active' ? 'default' : 'secondary'
+                            }
+                            className={`text-xs ${
+                              activity.status === 'completed' ? 'bg-green-500' :
+                              activity.status === 'active' ? 'bg-blue-500' : ''
+                            }`}
+                          >
+                            {activity.status === 'active' ? 'ongoing' : activity.status}
+                          </Badge>"""
+    
+    content = content.replace(old_badge, new_badge)
+    
+    # Write the updated content
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    
+    print("✅ Successfully updated AlumniDashboard.tsx")
+    print("Changes applied:")
+    print("  - Added 'project' type to RecentActivity interface")
+    print("  - Added projects fetch to Promise.all")
+    print("  - Added logic to process ongoing and completed projects")
+    print("  - Updated UI to display project icons and badges")
+
+
+def update_student_dashboard():
+    """
+    Update StudentDashboard.tsx to show ongoing and completed projects in Recent Activity
+    """
+    file_path = 'd:/AlumConnect/frontend/src/pages/StudentDashboard.tsx'
+    
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # The student dashboard already shows applied projects in the Recent Activity section
+    # We just need to enhance it to distinguish between ongoing (active) and completed projects
+    
+    # 1. Update the Recent Activity section to show project status with different styling
+    old_activity = """                      <div key={project.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-gray-900">Applied to {project.title}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(project.applied_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Badge variant={project.application_status === 'accepted' ? 'default' : 'secondary'} className="capitalize">
+                          {project.application_status}
+                        </Badge>
+                      </div>"""
+    
+    new_activity = """                      <div key={project.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                        <div className={`w-3 h-3 rounded-full ${
+                          project.status === 'completed' ? 'bg-green-500' : 
+                          project.status === 'active' ? 'bg-blue-500 animate-pulse' : 
+                          'bg-gray-400'
+                        }`}></div>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-gray-900">Applied to {project.title}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(project.applied_at).toLocaleDateString()} • {project.status === 'active' ? 'Ongoing' : project.status === 'completed' ? 'Completed' : project.status}
+                          </p>
+                        </div>
+                        <Badge variant={project.application_status === 'accepted' ? 'default' : 'secondary'} className="capitalize">
+                          {project.application_status}
+                        </Badge>
+                      </div>"""
+    
+    content = content.replace(old_activity, new_activity)
+    
+    # 2. Update the Applied Projects section to show project status
+    old_applied = """                    <div key={project.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                      <div>
+                        <p className="font-semibold text-gray-900">{project.title}</p>
+                        <p className="text-sm text-gray-500">{project.category}</p>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <Badge variant={project.application_status === 'accepted' ? 'default' : 'secondary'} className="capitalize">
+                          {project.application_status}
+                        </Badge>
+                        <Button variant="ghost" size="sm" asChild className="hover:bg-gray-200">
+                          <Link to={`/projects/${project.id}`}>
+                            <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>"""
+    
+    new_applied = """                    <div key={project.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                      <div>
+                        <p className="font-semibold text-gray-900">{project.title}</p>
+                        <p className="text-sm text-gray-500">{project.category} • {project.status === 'active' ? 'Ongoing' : project.status === 'completed' ? 'Completed' : project.status}</p>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <Badge 
+                          variant={project.application_status === 'accepted' ? 'default' : 'secondary'} 
+                          className={`capitalize ${
+                            project.status === 'completed' ? 'bg-green-500' : 
+                            project.status === 'active' ? 'bg-blue-500' : ''
+                          }`}
+                        >
+                          {project.application_status}
+                        </Badge>
+                        <Button variant="ghost" size="sm" asChild className="hover:bg-gray-200">
+                          <Link to={`/projects/${project.id}`}>
+                            <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>"""
+    
+    content = content.replace(old_applied, new_applied)
+    
+    # Write the updated content
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    
+    print("✅ Successfully updated StudentDashboard.tsx")
+    print("Changes applied:")
+    print("  - Updated Recent Activity to show project status (ongoing/completed)")
+    print("  - Added visual indicators for project status")
+    print("  - Enhanced Applied Projects section with status badges")
+
+
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, port=5001)

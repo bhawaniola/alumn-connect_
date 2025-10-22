@@ -67,6 +67,8 @@ interface Profile {
   institute?: string
   specialization?: string
   past_projects?: PastProject[]
+  // Alumni-specific fields
+  is_available?: boolean
 }
 
 export const ProfilePage: React.FC = () => {
@@ -464,6 +466,14 @@ export const ProfilePage: React.FC = () => {
                       {currentProfile.department}
                     </Badge>
                   )}
+                  {currentProfile.role === 'alumni' && currentProfile.is_available !== undefined && (
+                    <Badge 
+                      variant="secondary" 
+                      className={`${currentProfile.is_available ? 'bg-green-500/90 hover:bg-green-600' : 'bg-gray-500/90 hover:bg-gray-600'} text-white border-white/30`}
+                    >
+                      {currentProfile.is_available ? '✓ Available for Mentorship' : 'Not Available'}
+                    </Badge>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2">
@@ -559,6 +569,42 @@ export const ProfilePage: React.FC = () => {
                         className="bg-white/50"
                       />
                     </div>
+                    {/* Availability Toggle for Alumni */}
+                    {currentProfile.role === 'alumni' && (
+                      <div className="col-span-full pt-4 border-t">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="is_available" className="text-base font-semibold">Mentorship Availability</Label>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Toggle your availability for mentorship requests from students
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={currentProfile.is_available ?? true}
+                            onClick={() => setEditForm({...currentProfile, is_available: !(currentProfile.is_available ?? true)})}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                              currentProfile.is_available ?? true ? 'bg-green-600' : 'bg-gray-300'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                currentProfile.is_available ?? true ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                        <div className="mt-2">
+                          <Badge 
+                            variant="secondary" 
+                            className={`${currentProfile.is_available ?? true ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+                          >
+                            {currentProfile.is_available ?? true ? '✓ Available - Students can send mentorship requests' : 'Not Available - You won\'t receive mentorship requests'}
+                          </Badge>
+                        </div>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <>
