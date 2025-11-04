@@ -398,6 +398,12 @@ def init_db():
         cursor.execute('ALTER TABLE project_applications ADD COLUMN is_completed BOOLEAN DEFAULT 0')
     except:
         pass
+
+    # Add has_team column to project_applications table
+    try:
+        cursor.execute('ALTER TABLE project_applications ADD COLUMN has_team BOOLEAN DEFAULT 0')
+    except:
+        pass
     
     # User skills table
     cursor.execute('''
@@ -2206,7 +2212,7 @@ def get_alumni_project_applications():
                    p.title as project_title, p.id as project_id,
                    pa.student_id, u.name as student_name, u.email as student_email,
                    pa.position_id, pp.title as position_title,
-                   pa.is_completed, pa.completed_at, pa.feedback
+                   pa.is_completed, pa.completed_at, pa.feedback, pa.has_team
             FROM project_applications pa
             JOIN projects p ON pa.project_id = p.id
             JOIN users u ON pa.student_id = u.id
@@ -2214,7 +2220,7 @@ def get_alumni_project_applications():
             WHERE p.created_by = ?
             ORDER BY pa.created_at DESC
         ''', (user_id,))
-        
+
         applications = []
         for row in cursor.fetchall():
             applications.append({
@@ -2231,7 +2237,8 @@ def get_alumni_project_applications():
                 'position_title': row[10],
                 'is_completed': bool(row[11]) if row[11] is not None else False,
                 'completed_at': row[12],
-                'feedback': row[13]
+                'feedback': row[13],
+                'has_team': bool(row[14]) if row[14] is not None else False
             })
         
         return jsonify(applications), 200
@@ -2272,14 +2279,14 @@ def get_project_applications(project_id):
             SELECT pa.id, pa.message, pa.status, pa.created_at,
                    pa.student_id, u.name as student_name, u.email as student_email,
                    pa.position_id, pp.title as position_title,
-                   pa.is_completed, pa.completed_at, pa.feedback
+                   pa.is_completed, pa.completed_at, pa.feedback, pa.has_team
             FROM project_applications pa
             JOIN users u ON pa.student_id = u.id
             LEFT JOIN project_positions pp ON pa.position_id = pp.id
             WHERE pa.project_id = ?
             ORDER BY pa.created_at DESC
         ''', (project_id,))
-        
+
         applications = []
         for row in cursor.fetchall():
             applications.append({
@@ -2294,7 +2301,8 @@ def get_project_applications(project_id):
                 'position_title': row[8],
                 'is_completed': bool(row[9]) if row[9] is not None else False,
                 'completed_at': row[10],
-                'feedback': row[11]
+                'feedback': row[11],
+                'has_team': bool(row[12]) if row[12] is not None else False
             })
         
         return jsonify(applications), 200
@@ -2499,6 +2507,7 @@ def create_project_application():
     project_id = data.get('project_id')
     position_id = data.get('position_id')
     message = data.get('message', '')
+    has_team = data.get('has_team', False)
 
     if not project_id:
         return jsonify({'error': 'Project ID is required'}), 400
@@ -2544,9 +2553,9 @@ def create_project_application():
 
         # Insert application
         cursor.execute('''
-            INSERT INTO project_applications (project_id, student_id, position_id, message, status, created_at)
-            VALUES (?, ?, ?, ?, ?, datetime('now'))
-        ''', (project_id, user_id, position_id, message, 'pending'))
+            INSERT INTO project_applications (project_id, student_id, position_id, message, status, created_at, has_team)
+            VALUES (?, ?, ?, ?, ?, datetime('now'), ?)
+        ''', (project_id, user_id, position_id, message, 'pending', has_team))
 
         conn.commit()
         return jsonify({'message': 'Application submitted successfully', 'position_id': position_id}), 201

@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
-import { Loader2, User, Check, X, Mail, CheckCircle, ArrowLeft } from 'lucide-react'
+import { Loader2, User, Check, X, Mail, CheckCircle, ArrowLeft, Users } from 'lucide-react'
 import { FeedbackModal } from '../components/FeedbackModal'
 
 interface ProjectApplication {
@@ -20,6 +20,7 @@ interface ProjectApplication {
   is_completed?: boolean
   completed_at?: string
   feedback?: string
+  has_team?: boolean
 }
 
 interface Project {
@@ -212,12 +213,18 @@ export const ProjectApplicationsDetailPage: React.FC = () => {
                     <Card key={application.id} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                       <CardHeader>
                         <div className="flex items-center justify-between">
-                          <div>
+                          <div className="flex-1">
                             <CardTitle className="text-lg">{application.student_name}</CardTitle>
                             <CardDescription className="flex items-center space-x-2 mt-1">
                               <Mail className="h-3 w-3" />
                               <span>{application.student_email}</span>
                             </CardDescription>
+                            {application.has_team && (
+                              <Badge variant="outline" className="mt-2 bg-blue-50 text-blue-700 border-blue-200">
+                                <Users className="h-3 w-3 mr-1" />
+                                Has Team
+                              </Badge>
+                            )}
                           </div>
                           <Badge variant="outline" className="capitalize">{application.status}</Badge>
                         </div>
@@ -288,12 +295,18 @@ export const ProjectApplicationsDetailPage: React.FC = () => {
                     <Card key={application.id} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                       <CardHeader>
                         <div className="flex items-center justify-between">
-                          <div>
+                          <div className="flex-1">
                             <CardTitle className="text-lg">{application.student_name}</CardTitle>
                             <CardDescription className="flex items-center space-x-2 mt-1">
                               <Mail className="h-3 w-3" />
                               <span>{application.student_email}</span>
                             </CardDescription>
+                            {application.has_team && (
+                              <Badge variant="outline" className="mt-2 bg-blue-50 text-blue-700 border-blue-200">
+                                <Users className="h-3 w-3 mr-1" />
+                                Has Team
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex items-center space-x-2">
                             <Badge variant="default" className="capitalize">{application.status}</Badge>
@@ -374,12 +387,18 @@ export const ProjectApplicationsDetailPage: React.FC = () => {
                     <Card key={application.id} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm opacity-75">
                       <CardHeader>
                         <div className="flex items-center justify-between">
-                          <div>
+                          <div className="flex-1">
                             <CardTitle className="text-lg">{application.student_name}</CardTitle>
                             <CardDescription className="flex items-center space-x-2 mt-1">
                               <Mail className="h-3 w-3" />
                               <span>{application.student_email}</span>
                             </CardDescription>
+                            {application.has_team && (
+                              <Badge variant="outline" className="mt-2 bg-blue-50 text-blue-700 border-blue-200">
+                                <Users className="h-3 w-3 mr-1" />
+                                Has Team
+                              </Badge>
+                            )}
                           </div>
                           <Badge variant="secondary" className="capitalize">{application.status}</Badge>
                         </div>
