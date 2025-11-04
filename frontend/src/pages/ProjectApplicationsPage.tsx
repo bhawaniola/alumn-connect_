@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
-import { Loader2, User, Check, X, Mail, ArrowLeft, Eye, CheckCircle } from 'lucide-react'
+import { Loader2, User, Check, X, Mail, ArrowLeft, Eye, CheckCircle, Users } from 'lucide-react'
 import { ProfileModal } from '../components/ProfileModal'
 import { FeedbackModal } from '../components/FeedbackModal'
 
@@ -19,6 +19,7 @@ interface ProjectApplication {
   is_completed?: boolean
   completed_at?: string
   feedback?: string
+  has_team?: boolean
 }
 
 interface Project {
@@ -193,11 +194,17 @@ export const ProjectApplicationsPage: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 flex-wrap">
                           <User className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm">{application.student_name}</span>
                           <Mail className="h-4 w-4 text-muted-foreground ml-2" />
                           <span className="text-sm text-muted-foreground">{application.student_email}</span>
+                          {application.has_team && (
+                            <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
+                              <Users className="h-3 w-3 mr-1" />
+                              Has Team
+                            </Badge>
+                          )}
                         </div>
                         
                         {application.message && (
@@ -273,7 +280,7 @@ export const ProjectApplicationsPage: React.FC = () => {
                           <CardDescription>{application.student_email}</CardDescription>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Badge 
+                          <Badge
                             variant={application.status === 'accepted' ? 'default' : 'secondary'}
                             className="capitalize"
                           >
@@ -290,11 +297,17 @@ export const ProjectApplicationsPage: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 flex-wrap">
                           <User className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm">{application.student_name}</span>
                           <Mail className="h-4 w-4 text-muted-foreground ml-2" />
                           <span className="text-sm text-muted-foreground">{application.student_email}</span>
+                          {application.has_team && (
+                            <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
+                              <Users className="h-3 w-3 mr-1" />
+                              Has Team
+                            </Badge>
+                          )}
                         </div>
                         
                         {application.message && (

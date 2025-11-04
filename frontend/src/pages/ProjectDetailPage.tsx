@@ -5,6 +5,7 @@ import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Textarea } from '../components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog'
+import { Switch } from '../components/ui/switch'
 import { Avatar, AvatarFallback } from '../components/ui/avatar'
 import { Briefcase, Users, Loader2, Send, CheckCircle, ArrowLeft, MapPin, Clock, DollarSign, UserCheck, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Edit, Mail, Phone, Globe, Award, TrendingUp, Handshake, Star, ChevronDown, Calendar, Heart, X, ChevronUp } from 'lucide-react'
 import { ProfileModal } from '../components/ProfileModal'
@@ -66,6 +67,7 @@ export const ProjectDetailPage: React.FC = () => {
   const [project, setProject] = useState<Project | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [applicationMessage, setApplicationMessage] = useState('')
+  const [hasTeam, setHasTeam] = useState(false)
   const [isApplying, setIsApplying] = useState(false)
   const [applicationSubmitted, setApplicationSubmitted] = useState(false)
   const [positionApplications, setPositionApplications] = useState<Record<string, { application_id: number, status: string, applied_at: string, is_legacy?: boolean }>>({})
@@ -231,7 +233,8 @@ export const ProjectDetailPage: React.FC = () => {
     const requestBody = {
       project_id: project.id,
       position_id: selectedPosition,
-      message: applicationMessage
+      message: applicationMessage,
+      has_team: hasTeam
     }
     
     console.log('📤 Submitting application:', requestBody)
@@ -264,6 +267,7 @@ export const ProjectDetailPage: React.FC = () => {
         }))
         setApplicationSubmitted(true)
         setApplicationMessage('')
+        setHasTeam(false)
         setIsApplyDialogOpen(false)
         setSelectedPosition(null)
         // Refetch to get the actual application data from server
@@ -855,6 +859,7 @@ export const ProjectDetailPage: React.FC = () => {
                                   if (!open) {
                                     setSelectedPosition(null)
                                     setApplicationMessage('')
+                                    setHasTeam(false)
                                   }
                                 }}>
                                   <DialogTrigger asChild>
@@ -883,6 +888,21 @@ export const ProjectDetailPage: React.FC = () => {
                                         onChange={(e) => setApplicationMessage(e.target.value)}
                                         rows={4}
                                       />
+                                      <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+                                        <div className="flex flex-col">
+                                          <label htmlFor="has-team" className="text-sm font-medium text-gray-900">
+                                            Do you have a team?
+                                          </label>
+                                          <span className="text-xs text-gray-500">
+                                            Toggle if you're applying with an existing team
+                                          </span>
+                                        </div>
+                                        <Switch
+                                          id="has-team"
+                                          checked={hasTeam}
+                                          onCheckedChange={setHasTeam}
+                                        />
+                                      </div>
                                       <Button 
                                         onClick={handleApply} 
                                         disabled={isApplying || !applicationMessage.trim()}
