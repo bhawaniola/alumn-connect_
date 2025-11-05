@@ -1237,94 +1237,106 @@ The journey is hard, but incredibly rewarding. Would I do it again? Absolutely.
     # ----------------- Project Applications -----------------
     project_applications = [
         # AI Healthcare - ML Engineer position
-        {'project_id': project_ids['AI-Powered Healthcare Diagnostics'], 
-         'position_id': position_ids[f"{project_ids['AI-Powered Healthcare Diagnostics']}_ML Engineer"], 
-         'student_id': user_ids['sneha.reddy@iitkgp.ac.in'], 
-         'message': 'I have extensive experience with Python and TensorFlow through my coursework and personal projects. I completed Andrew Ng\'s Deep Learning Specialization and built a disease prediction system for my course project that achieved 92% accuracy. I am particularly interested in medical imaging and have been following MediAI\'s research papers. I would love to contribute to this life-saving project and learn from your team.', 
-         'status': 'pending'},
-        
-        {'project_id': project_ids['AI-Powered Healthcare Diagnostics'], 
-         'position_id': position_ids[f"{project_ids['AI-Powered Healthcare Diagnostics']}_ML Engineer"], 
-         'student_id': user_ids['karan.malhotra@iitkgp.ac.in'], 
-         'message': 'I have worked on computer vision projects including a real-time object detection system using YOLO and a facial recognition attendance system. I am passionate about healthcare AI and believe technology can democratize access to quality healthcare. I have strong Python skills and have implemented CNNs from scratch. I would bring dedication and quick learning ability to your team.', 
-         'status': 'accepted'},
-        
+        {'project_id': project_ids['AI-Powered Healthcare Diagnostics'],
+         'position_id': position_ids[f"{project_ids['AI-Powered Healthcare Diagnostics']}_ML Engineer"],
+         'student_id': user_ids['sneha.reddy@iitkgp.ac.in'],
+         'message': 'I have extensive experience with Python and TensorFlow through my coursework and personal projects. I completed Andrew Ng\'s Deep Learning Specialization and built a disease prediction system for my course project that achieved 92% accuracy. I am particularly interested in medical imaging and have been following MediAI\'s research papers. I would love to contribute to this life-saving project and learn from your team.',
+         'status': 'pending',
+         'has_team': False},
+
+        {'project_id': project_ids['AI-Powered Healthcare Diagnostics'],
+         'position_id': position_ids[f"{project_ids['AI-Powered Healthcare Diagnostics']}_ML Engineer"],
+         'student_id': user_ids['karan.malhotra@iitkgp.ac.in'],
+         'message': 'I have worked on computer vision projects including a real-time object detection system using YOLO and a facial recognition attendance system. I am passionate about healthcare AI and believe technology can democratize access to quality healthcare. I have strong Python skills and have implemented CNNs from scratch. I would bring dedication and quick learning ability to your team.',
+         'status': 'accepted',
+         'has_team': True},
+
         # AI Healthcare - Backend Developer position
-        {'project_id': project_ids['AI-Powered Healthcare Diagnostics'], 
-         'position_id': position_ids[f"{project_ids['AI-Powered Healthcare Diagnostics']}_Backend Developer"], 
-         'student_id': user_ids['arjun.mehta@iitkgp.ac.in'], 
-         'message': 'Strong experience in Flask and PostgreSQL through multiple web development projects. I built a scalable REST API for our college fest registration system that handled 10,000+ concurrent users. I understand the importance of secure and efficient backend systems, especially in healthcare where patient data privacy is critical. Excited to contribute to MediAI\'s mission.', 
-         'status': 'pending'},
-        
+        {'project_id': project_ids['AI-Powered Healthcare Diagnostics'],
+         'position_id': position_ids[f"{project_ids['AI-Powered Healthcare Diagnostics']}_Backend Developer"],
+         'student_id': user_ids['arjun.mehta@iitkgp.ac.in'],
+         'message': 'Strong experience in Flask and PostgreSQL through multiple web development projects. I built a scalable REST API for our college fest registration system that handled 10,000+ concurrent users. I understand the importance of secure and efficient backend systems, especially in healthcare where patient data privacy is critical. Excited to contribute to MediAI\'s mission.',
+         'status': 'pending',
+         'has_team': False},
+
         # Sustainable Energy - IoT Developer position
-        {'project_id': project_ids['Sustainable Energy Management System'], 
-         'position_id': position_ids[f"{project_ids['Sustainable Energy Management System']}_IoT Developer"], 
-         'student_id': user_ids['karan.malhotra@iitkgp.ac.in'], 
-         'message': 'I have hands-on experience with IoT and embedded systems. Built an IoT weather station using Arduino and Raspberry Pi that publishes real-time data via MQTT. Also worked on a solar panel monitoring system. I am passionate about renewable energy and would love to contribute to building a sustainable future. Your project aligns perfectly with my interests.', 
-         'status': 'pending'},
-        
+        {'project_id': project_ids['Sustainable Energy Management System'],
+         'position_id': position_ids[f"{project_ids['Sustainable Energy Management System']}_IoT Developer"],
+         'student_id': user_ids['karan.malhotra@iitkgp.ac.in'],
+         'message': 'I have hands-on experience with IoT and embedded systems. Built an IoT weather station using Arduino and Raspberry Pi that publishes real-time data via MQTT. Also worked on a solar panel monitoring system. I am passionate about renewable energy and would love to contribute to building a sustainable future. Your project aligns perfectly with my interests.',
+         'status': 'pending',
+         'has_team': True},
+
         # Blockchain - Blockchain Developer position
-        {'project_id': project_ids['Blockchain Supply Chain Tracker'], 
-         'position_id': position_ids[f"{project_ids['Blockchain Supply Chain Tracker']}_Blockchain Developer"], 
-         'student_id': user_ids['sneha.reddy@iitkgp.ac.in'], 
-         'message': 'I have been learning blockchain and smart contracts through online courses and hackathons. Built a basic supply chain tracker using Ethereum and Solidity as a learning project. I am fascinated by how blockchain can bring transparency and trust to supply chains. This project would be an incredible opportunity to work on production-level blockchain applications.', 
-         'status': 'declined'},
-        
+        {'project_id': project_ids['Blockchain Supply Chain Tracker'],
+         'position_id': position_ids[f"{project_ids['Blockchain Supply Chain Tracker']}_Blockchain Developer"],
+         'student_id': user_ids['sneha.reddy@iitkgp.ac.in'],
+         'message': 'I have been learning blockchain and smart contracts through online courses and hackathons. Built a basic supply chain tracker using Ethereum and Solidity as a learning project. I am fascinated by how blockchain can bring transparency and trust to supply chains. This project would be an incredible opportunity to work on production-level blockchain applications.',
+         'status': 'declined',
+         'has_team': False},
+
         # Smart Agriculture - IoT Engineer position (filled)
-        {'project_id': project_ids['Smart Agriculture Monitoring'], 
-         'position_id': position_ids[f"{project_ids['Smart Agriculture Monitoring']}_IoT Engineer"], 
-         'student_id': user_ids['neha.gupta@iitkgp.ac.in'], 
-         'message': 'As a biotechnology student, I am very interested in AgriTech. I have experience with IoT sensors from my lab work and built a prototype plant health monitoring system using Arduino and various sensors (soil moisture, pH, temperature). Combining my biotech knowledge with IoT skills, I can contribute unique insights to your project. Agriculture is personal to me as I come from a farming family.', 
-         'status': 'accepted'},
-        
+        {'project_id': project_ids['Smart Agriculture Monitoring'],
+         'position_id': position_ids[f"{project_ids['Smart Agriculture Monitoring']}_IoT Engineer"],
+         'student_id': user_ids['neha.gupta@iitkgp.ac.in'],
+         'message': 'As a biotechnology student, I am very interested in AgriTech. I have experience with IoT sensors from my lab work and built a prototype plant health monitoring system using Arduino and various sensors (soil moisture, pH, temperature). Combining my biotech knowledge with IoT skills, I can contribute unique insights to your project. Agriculture is personal to me as I come from a farming family.',
+         'status': 'accepted',
+         'has_team': True},
+
         # Smart Agriculture - Full Stack Developer position
-        {'project_id': project_ids['Smart Agriculture Monitoring'], 
-         'position_id': position_ids[f"{project_ids['Smart Agriculture Monitoring']}_Full Stack Developer"], 
-         'student_id': user_ids['sneha.reddy@iitkgp.ac.in'], 
-         'message': 'Experienced with MERN stack through multiple projects. Built a real-time dashboard for our robotics team that displays sensor data using Chart.js and Socket.io. I am excited about using technology to help farmers. Creating intuitive interfaces that farmers can easily use is a challenge I would love to tackle. Agriculture needs better technology solutions and I want to be part of that change.', 
-         'status': 'pending'},
-        
+        {'project_id': project_ids['Smart Agriculture Monitoring'],
+         'position_id': position_ids[f"{project_ids['Smart Agriculture Monitoring']}_Full Stack Developer"],
+         'student_id': user_ids['sneha.reddy@iitkgp.ac.in'],
+         'message': 'Experienced with MERN stack through multiple projects. Built a real-time dashboard for our robotics team that displays sensor data using Chart.js and Socket.io. I am excited about using technology to help farmers. Creating intuitive interfaces that farmers can easily use is a challenge I would love to tackle. Agriculture needs better technology solutions and I want to be part of that change.',
+         'status': 'pending',
+         'has_team': True},
+
         # Urban Infrastructure - GIS Specialist position
-        {'project_id': project_ids['Urban Infrastructure Planning Tool'], 
-         'position_id': position_ids[f"{project_ids['Urban Infrastructure Planning Tool']}_GIS Specialist"], 
-         'student_id': user_ids['rohan.desai@iitkgp.ac.in'], 
-         'message': 'I am a civil engineering student with experience in GIS and AutoCAD from my coursework. I have worked on urban traffic flow simulation using SUMO and GIS tools. I am passionate about smart cities and sustainable urban development. India\'s urbanization presents unique challenges and I want to be part of building cities that are livable, sustainable, and inclusive.', 
-         'status': 'pending'},
-        
+        {'project_id': project_ids['Urban Infrastructure Planning Tool'],
+         'position_id': position_ids[f"{project_ids['Urban Infrastructure Planning Tool']}_GIS Specialist"],
+         'student_id': user_ids['rohan.desai@iitkgp.ac.in'],
+         'message': 'I am a civil engineering student with experience in GIS and AutoCAD from my coursework. I have worked on urban traffic flow simulation using SUMO and GIS tools. I am passionate about smart cities and sustainable urban development. India\'s urbanization presents unique challenges and I want to be part of building cities that are livable, sustainable, and inclusive.',
+         'status': 'pending',
+         'has_team': False},
+
         # Chemical Process - Process Engineer position (filled)
-        {'project_id': project_ids['Chemical Process Optimization Platform'], 
-         'position_id': position_ids[f"{project_ids['Chemical Process Optimization Platform']}_Process Engineer"], 
-         'student_id': user_ids['divya.nair@iitkgp.ac.in'], 
-         'message': 'I have strong background in chemical engineering and Python. Worked with ASPEN for process simulation in multiple course projects. I am passionate about sustainable manufacturing and green chemistry. Built an optimization model for waste water treatment that reduced chemical usage by 25%. Excited about using AI to make chemical processes more efficient and sustainable.', 
-         'status': 'accepted'},
-        
+        {'project_id': project_ids['Chemical Process Optimization Platform'],
+         'position_id': position_ids[f"{project_ids['Chemical Process Optimization Platform']}_Process Engineer"],
+         'student_id': user_ids['divya.nair@iitkgp.ac.in'],
+         'message': 'I have strong background in chemical engineering and Python. Worked with ASPEN for process simulation in multiple course projects. I am passionate about sustainable manufacturing and green chemistry. Built an optimization model for waste water treatment that reduced chemical usage by 25%. Excited about using AI to make chemical processes more efficient and sustainable.',
+         'status': 'accepted',
+         'has_team': True},
+
         # Robotics - Robotics Engineer position
-        {'project_id': project_ids['Robotics for Manufacturing Automation'], 
-         'position_id': position_ids[f"{project_ids['Robotics for Manufacturing Automation']}_Robotics Engineer"], 
-         'student_id': user_ids['arjun.mehta@iitkgp.ac.in'], 
-         'message': 'I have extensive experience with ROS and robotics through KGP Robotics Team (where I am captain). Built multiple autonomous robots including a line-following robot and a 6-DOF robotic arm. I am very passionate about automation and manufacturing. Understanding inverse kinematics, PID control, and sensor integration. This project is exactly what I want to work on.', 
-         'status': 'pending'},
-        
+        {'project_id': project_ids['Robotics for Manufacturing Automation'],
+         'position_id': position_ids[f"{project_ids['Robotics for Manufacturing Automation']}_Robotics Engineer"],
+         'student_id': user_ids['arjun.mehta@iitkgp.ac.in'],
+         'message': 'I have extensive experience with ROS and robotics through KGP Robotics Team (where I am captain). Built multiple autonomous robots including a line-following robot and a 6-DOF robotic arm. I am very passionate about automation and manufacturing. Understanding inverse kinematics, PID control, and sensor integration. This project is exactly what I want to work on.',
+         'status': 'pending',
+         'has_team': True},
+
         # Robotics - Computer Vision Engineer position
-        {'project_id': project_ids['Robotics for Manufacturing Automation'], 
-         'position_id': position_ids[f"{project_ids['Robotics for Manufacturing Automation']}_Computer Vision Engineer"], 
-         'student_id': user_ids['sneha.reddy@iitkgp.ac.in'], 
-         'message': 'Worked on multiple OpenCV projects including object detection, facial recognition, and defect detection systems. Built a quality inspection system for my course project that achieved 97% accuracy in detecting defects. I am excited about applying computer vision to manufacturing and quality control. Manufacturing automation is the future and I want to contribute to building it.', 
-         'status': 'pending'},
-        
+        {'project_id': project_ids['Robotics for Manufacturing Automation'],
+         'position_id': position_ids[f"{project_ids['Robotics for Manufacturing Automation']}_Computer Vision Engineer"],
+         'student_id': user_ids['sneha.reddy@iitkgp.ac.in'],
+         'message': 'Worked on multiple OpenCV projects including object detection, facial recognition, and defect detection systems. Built a quality inspection system for my course project that achieved 97% accuracy in detecting defects. I am excited about applying computer vision to manufacturing and quality control. Manufacturing automation is the future and I want to contribute to building it.',
+         'status': 'pending',
+         'has_team': False},
+
         # Additional applications for diversity
-        {'project_id': project_ids['Sustainable Energy Management System'], 
-         'position_id': position_ids[f"{project_ids['Sustainable Energy Management System']}_Data Analyst"], 
-         'student_id': user_ids['divya.nair@iitkgp.ac.in'], 
-         'message': 'Strong Python and data analytics skills. Built multiple dashboards using Power BI and Python for process data visualization. Interested in renewable energy and sustainability. Would love to analyze energy patterns and help optimize grid performance.', 
-         'status': 'pending'},
+        {'project_id': project_ids['Sustainable Energy Management System'],
+         'position_id': position_ids[f"{project_ids['Sustainable Energy Management System']}_Data Analyst"],
+         'student_id': user_ids['divya.nair@iitkgp.ac.in'],
+         'message': 'Strong Python and data analytics skills. Built multiple dashboards using Power BI and Python for process data visualization. Interested in renewable energy and sustainability. Would love to analyze energy patterns and help optimize grid performance.',
+         'status': 'pending',
+         'has_team': False},
     ]
     
     for app in project_applications:
         cursor.execute('''
-            INSERT INTO project_applications (project_id, position_id, student_id, message, status)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (app['project_id'], app['position_id'], app['student_id'], app['message'], app['status']))
+            INSERT INTO project_applications (project_id, position_id, student_id, message, status, has_team)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (app['project_id'], app['position_id'], app['student_id'], app['message'], app['status'], app['has_team']))
 
     # ----------------- Conversations & Messages -----------------
     conversation_pairs = [
