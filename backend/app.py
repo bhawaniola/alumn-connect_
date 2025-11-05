@@ -176,42 +176,29 @@ def init_db():
         cursor.execute('ALTER TABLE users ADD COLUMN is_available BOOLEAN DEFAULT 1')
     except:
         pass
-    
-    # Add new columns to project_positions table if they don't exist
-    try:
-        cursor.execute('ALTER TABLE project_positions ADD COLUMN stipend INTEGER')
-    except:
-        pass
-    try:
-        cursor.execute('ALTER TABLE project_positions ADD COLUMN duration TEXT')
-    except:
-        pass
-    try:
-        cursor.execute('ALTER TABLE project_positions ADD COLUMN location TEXT')
-    except:
-        pass
-    
-    # Add new columns to projects table if they don't exist
-    try:
-        cursor.execute('ALTER TABLE projects ADD COLUMN stipend INTEGER')
-    except:
-        pass
-    try:
-        cursor.execute('ALTER TABLE projects ADD COLUMN duration TEXT')
-    except:
-        pass
-    try:
-        cursor.execute('ALTER TABLE projects ADD COLUMN skills_required TEXT')
-    except:
-        pass
-    try:
-        cursor.execute('ALTER TABLE projects ADD COLUMN location TEXT')
-    except:
-        pass
-    try:
-        cursor.execute('ALTER TABLE projects ADD COLUMN work_type TEXT')
-    except:
-        pass
+
+    # Projects table - CREATE FIRST
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            category TEXT NOT NULL,
+            status TEXT NOT NULL CHECK (status IN ('active', 'completed', 'paused')),
+            team_members TEXT,
+            tags TEXT,
+            stipend INTEGER,
+            duration TEXT,
+            skills_required TEXT,
+            location TEXT,
+            work_type TEXT CHECK (work_type IN ('remote', 'onsite', 'hybrid')),
+            created_by INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (created_by) REFERENCES users (id)
+        )
+    ''')
+
+    # Add new columns to projects table if they don't exist - AFTER CREATE
     try:
         cursor.execute('ALTER TABLE projects ADD COLUMN is_recruiting BOOLEAN DEFAULT 1')
     except:
@@ -248,28 +235,7 @@ def init_db():
         cursor.execute('ALTER TABLE projects ADD COLUMN highlights TEXT')
     except:
         pass
-    
-    # Projects table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS projects (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            description TEXT NOT NULL,
-            category TEXT NOT NULL,
-            status TEXT NOT NULL CHECK (status IN ('active', 'completed', 'paused')),
-            team_members TEXT,
-            tags TEXT,
-            stipend INTEGER,
-            duration TEXT,
-            skills_required TEXT,
-            location TEXT,
-            work_type TEXT CHECK (work_type IN ('remote', 'onsite', 'hybrid')),
-            created_by INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (created_by) REFERENCES users (id)
-        )
-    ''')
-    
+
     # Blog posts table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS blog_posts (
@@ -362,7 +328,21 @@ def init_db():
             FOREIGN KEY (project_id) REFERENCES projects (id)
         )
     ''')
-    
+
+    # Add new columns to project_positions table if they don't exist
+    try:
+        cursor.execute('ALTER TABLE project_positions ADD COLUMN stipend INTEGER')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE project_positions ADD COLUMN duration TEXT')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE project_positions ADD COLUMN location TEXT')
+    except:
+        pass
+
     # Project applications table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS project_applications (
